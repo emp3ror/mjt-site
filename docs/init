@@ -1,0 +1,85 @@
+
+
+# Build a Next.js Static Personal Site (Tech • Life • Art)
+
+## Persona & Context
+
+You are a senior full-stack developer building a fast, static-exportable Next.js site for my personal writing. I write about:
+
+1. software/tech, 2) personal essays, 3) art studies/process journals.
+   Tone: minimalist, thoughtful, slightly playful; visuals: artsy & editorial.
+
+## Primary Goals
+
+* Static site (no server at runtime) with excellent lighthouse scores.
+* Home page is an *artsy, stylish* editorial layout that spotlights latest posts across the three categories.
+* Posts written in MDX with per-post frontmatter and embedded components (callouts, footnotes, art galleries).
+* Distinct **Comments** section per post **and** inline **comment highlights/annotations** inside the article body that sync to the thread (click highlight → scroll to comment; click comment → highlight text range).
+* Easy local authoring workflow + RSS + sitemap + basic analytics.
+
+## Stack & Constraints
+
+* **Next.js ** using **Static Site Generation only**. Ensure `output: 'export'` works.
+* **TypeScript**, **ESLint + Prettier**.
+* **Styling**: Tailwind CSS + shadcn/ui for primitives; CSS variables for theme tokens; system + toggle **dark mode**.
+* **Content**: MDX via `@next/mdx` or `next-mdx-remote` with `remark/rehype` plugins (footnotes, slug, autolink headings, code titles, reading time).
+* **Images**: `next/image` with responsive sizes and blur placeholders.
+* **Icons**: lucide-react.
+* **Comments** (static-friendly): **giscus** for write UI (GitHub Discussions). **Client-side read** of discussion threads to power inline highlights (see “Inline Comments” below).
+* **Build outputs**: RSS feed, `sitemap.xml`, `robots.txt`, OpenGraph/Twitter cards.
+* **Analytics**: simple privacy-friendly (e.g., Plausible) via script tag.
+* **Accessibility**: keyboard focus states, skip links, semantic landmarks, aria labels.
+* **Performance**: prefetch links, image optimization, font subsetting (use `next/font`).
+
+## Information Architecture
+
+* `/` (Home): editorial collage grid
+* `/posts/[slug]` (MDX article) with inline annotation → comment sync
+* `/tags/[tag]`, `/category/[tech|personal|art]`
+* `/about`, `/now`, `/uses`
+* `/feed.xml`, `/sitemap.xml`, `/robots.txt`
+
+## Content Model
+
+* `content/` folder with MDX files and frontmatter (`title`, `date`, `description`, `category`, `tags`, `cover`).
+
+## Inline Comments
+
+* MDX shortcode `<Annotate id="l42">…</Annotate>`
+* Syncs with giscus/GitHub Discussions comments using a convention `@annot(l42)`
+* Click highlight → scroll to comment; click comment badge → scroll to text.
+
+## Home Page Design
+
+* Editorial, artsy grid with asymmetric cards, subtle texture, Framer Motion hover.
+* “Art Study of the Week” hero with image/video.
+* Soft ink-stroke motif for artistic feel.
+
+## Tooling & Quality
+
+* **Yarn** as package manager.
+* Scripts:
+
+  * `yarn dev`
+  * `yarn build`
+  * `yarn export`
+  * `yarn lint`
+  * `yarn new:post "title"` (CLI scaffold)
+* Precommit hook: lint + typecheck.
+* Simple Playwright smoke tests.
+
+## Deliverables
+
+1. Repo scaffold (Next.js + Tailwind + shadcn + MDX).
+2. Example content: 3 demo posts (tech, personal, art) with code blocks, images, annotations, and comments mapping.
+3. `README.md` with Yarn commands, giscus config placeholders, deploy steps for Vercel/Netlify.
+4. Light/dark theme tokens.
+
+## Acceptance Criteria
+
+* `yarn build && yarn export` produces a fully static `out/`.
+* Home is responsive and artsy.
+* Inline annotations + comments mapping demonstrated.
+* Lighthouse ≥95 (Perf, Best Practices, SEO), Accessibility ≥90.
+
+---

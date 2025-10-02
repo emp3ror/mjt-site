@@ -1,0 +1,30 @@
+---
+title: "Tracing the Shape of Code"
+description: "Sketching an architecture-first approach to building personal sites."
+date: "2024-05-12"
+category: "tech"
+tags:
+  - architecture
+  - nextjs
+cover: "/images/tech-placeholder.jpg"
+---
+
+# Tracing the Shape of Code
+
+Designing a personal site starts with the constraints. For this build, the north star is a static export that still feels alive.
+
+> Static-first does not mean lifeless—it means intentional about what truly needs to run on the client.
+
+## Notes from the planning sketch
+
+- Contentlayer owns the data model so we keep MDX portable.
+- Light/dark palettes stay in CSS custom properties.
+- Keep every fancy animation behind `prefers-reduced-motion` checks.[^motion]
+
+```tsx
+export function loadPosts() {
+  return sortByDate(allPosts);
+}
+```
+
+[^motion]: We owe accessibility more than a quick toggle.
