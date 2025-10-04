@@ -16,6 +16,7 @@ type GpxWaypoint = {
   lon: number;
   name?: string;
   desc?: string;
+  icon?: string;
 };
 
 type GpxTrack = {
@@ -64,6 +65,7 @@ type Leaflet = {
   marker: (latlng: [number, number], options?: Record<string, unknown>) => LeafletMarker;
   circleMarker: (latlng: [number, number], options?: Record<string, unknown>) => LeafletMarker;
   icon: (options: Record<string, unknown>) => unknown;
+  divIcon: (options: Record<string, unknown>) => unknown;
 };
 
 type ChartActiveElement = { datasetIndex: number; index: number };
@@ -196,6 +198,31 @@ const ensureChart = async () => {
   return chartPromise;
 };
 
+const resolveWaypointIcon = (value?: string) => {
+  if (!value) {
+    return undefined;
+  }
+
+  const lower = value.toLowerCase();
+  if (lower.includes("start") || lower.includes("trailhead")) {
+    return "🥾";
+  }
+  if (lower.includes("summit") || lower.includes("finish") || lower.includes("peak")) {
+    return "🎉";
+  }
+  if (lower.includes("water") || lower.includes("spring")) {
+    return "💧";
+  }
+  if (lower.includes("food") || lower.includes("meal") || lower.includes("snack")) {
+    return "🥪";
+  }
+  if (lower.includes("camp") || lower.includes("rest")) {
+    return "⛺️";
+  }
+
+  return "📍";
+};
+
 const parseGpx = (xml: Document): GpxTrack => {
   const trkpts = Array.from(xml.getElementsByTagName("trkpt"));
   const points: GpxPoint[] = trkpts
@@ -226,11 +253,14 @@ const parseGpx = (xml: Document): GpxTrack => {
       }
       const name = node.getElementsByTagName("name")[0]?.textContent ?? undefined;
       const desc = node.getElementsByTagName("desc")[0]?.textContent ?? undefined;
+      const symbol = node.getElementsByTagName("sym")[0]?.textContent ?? undefined;
+      const icon = resolveWaypointIcon(symbol ?? name ?? desc);
       return {
         lat,
         lon,
         name,
         desc,
+        icon,
       } satisfies GpxWaypoint;
     })
     .filter((waypoint): waypoint is GpxWaypoint => Boolean(waypoint));
@@ -337,15 +367,48 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
   const trackRef = useRef<GpxTrack | null>(null);
   const renderedWaypointsRef = useRef<GpxWaypoint[]>([]);
   const checkpointIndicesRef = useRef<number[]>([]);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
   const [track, setTrack] = useState<GpxTrack | null>(null);
   const [stats, setStats] = useState<TrackStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCoords, setSelectedCoords] = useState<string | null>(null);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
 
   useEffect(() => {
     trackRef.current = track;
   }, [track]);
+
+  const handleCoordinateSelection = useCallback((lat: number, lon: number) => {
+    const formatted = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    setSelectedCoords(formatted);
+    setCopyState("idle");
+  }, []);
+
+  const handleCopyCoordinates = useCallback(async () => {
+    if (!selectedCoords) {
+      return;
+    }
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(selectedCoords);
+        setCopyState("copied");
+      } else {
+        setCopyState("error");
+      }
+    } catch {
+      setCopyState("error");
+    }
+  }, [selectedCoords]);
+
+  useEffect(() => {
+    if (copyState !== "copied") {
+      return;
+    }
+    const timeout = window.setTimeout(() => setCopyState("idle"), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [copyState]);
 
   const highlightPoint = useCallback((index: number, eventPosition?: { x: number; y: number }) => {
     const currentTrack = trackRef.current;
@@ -469,6 +532,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         const { lat, lng } = payload.latlng;
         const index = findClosestPointIndex(track.points, lat, lng);
         highlightPoint(index);
+        handleCoordinateSelection(lat, lng);
       };
 
       polyline.on?.("click", handlePolylineClick);
@@ -481,6 +545,19 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
       });
     }
 
+    const handleMapClick = (payload: { latlng: { lat: number; lng: number } }) => {
+      const { lat, lng } = payload.latlng;
+      handleCoordinateSelection(lat, lng);
+    };
+
+    map.on("click", handleMapClick);
+
+    overlays.push({
+      remove: () => {
+        map.off("click", handleMapClick);
+      },
+    });
+
     const fallbackWaypoints: GpxWaypoint[] = track.points.length
       ? [
           {
@@ -488,6 +565,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
             lon: track.points[0].lon,
             name: "Trailhead",
             desc: "Starting point",
+            icon: "🥾",
           },
           track.points[Math.floor(track.points.length / 2)]
             ? {
@@ -495,6 +573,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
                 lon: track.points[Math.floor(track.points.length / 2)].lon,
                 name: "Midpoint",
                 desc: "Halfway through the trail",
+                icon: "🥪",
               }
             : null,
           {
@@ -502,6 +581,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
             lon: track.points[track.points.length - 1].lon,
             name: "Summit",
             desc: "Finish line",
+            icon: "🎉",
           },
         ].filter(Boolean) as GpxWaypoint[]
       : [];
@@ -510,7 +590,19 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
     renderedWaypointsRef.current = waypointsToRender;
 
     waypointsToRender.forEach((waypoint) => {
-      const marker = leaflet.marker([waypoint.lat, waypoint.lon]);
+      const markerOptions =
+        waypoint.icon
+          ? {
+              icon: leaflet.divIcon({
+                className: "hike-map-marker",
+                html: `<div style="display:flex;align-items:center;justify-content:center;font-size:18px;height:32px;width:32px;border-radius:16px;background:#fff;border:2px solid var(--leaf);box-shadow:0 6px 18px rgba(44,45,94,0.12);">${waypoint.icon}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+              }),
+            }
+          : undefined;
+
+      const marker = leaflet.marker([waypoint.lat, waypoint.lon], markerOptions);
       marker.addTo(map);
       if (waypoint.name || waypoint.desc) {
         const label = `<strong>${waypoint.name ?? "Checkpoint"}</strong>${
@@ -553,7 +645,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         overlay.remove();
       });
     };
-  }, [track, highlightPoint]);
+  }, [track, highlightPoint, handleCoordinateSelection]);
 
   useEffect(() => {
     let cancelled = false;
@@ -687,6 +779,93 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
 
       chartRef.current = chart;
 
+      const renderOverlay = () => {
+        const overlay = overlayRef.current;
+        if (!overlay) {
+          return;
+        }
+
+        overlay.innerHTML = "";
+        overlay.style.pointerEvents = "none";
+        overlay.style.zIndex = "1";
+
+        const chartAny = chart as unknown as {
+          scales: {
+            x: { getPixelForValue: (value: number) => number };
+            y: { top: number; bottom: number; getPixelForValue: (value: number) => number };
+          };
+          chartArea: { top: number; bottom: number };
+        };
+
+        const chartTop = chartAny.chartArea.top;
+        const chartBottom = chartAny.chartArea.bottom;
+
+                renderedWaypointsRef.current.forEach((waypoint, waypointIdx) => {
+          const pointIndex = waypointIndices[waypointIdx];
+          if (pointIndex === undefined) {
+            return;
+          }
+
+          const baseX = chartAny.scales.x.getPixelForValue(pointIndex);
+          const markerX = baseX + 10;
+
+          const line = document.createElement("div");
+          line.className = "pointer-events-none absolute w-px";
+          line.style.left = `${markerX}px`;
+          line.style.top = `${chartTop}px`;
+          line.style.height = `${chartBottom - chartTop}px`;
+          line.style.backgroundColor = "rgba(74, 174, 105, 0.6)";
+          line.style.transform = "translateX(-0.5px)";
+          overlay.appendChild(line);
+
+          const wrapper = document.createElement("div");
+          wrapper.className =
+            "absolute flex cursor-pointer flex-col items-center gap-2 text-[color:var(--ink)]";
+          wrapper.style.left = `${markerX}px`;
+          wrapper.style.top = `${Math.max(chartTop - 120, 0)}px`;
+          wrapper.style.transform = "translateX(-50%)";
+          wrapper.style.pointerEvents = "auto";
+
+          const circle = document.createElement("div");
+          circle.className =
+            "flex h-12 w-12 items-center justify-center rounded-full border-2 bg-white text-sm font-semibold";
+          circle.style.borderColor = "var(--leaf)";
+          circle.style.boxShadow = "0 8px 18px rgba(44, 45, 94, 0.12)";
+          circle.textContent = (waypoint.name ?? `CP${waypointIdx + 1}`).slice(0, 3).toUpperCase();
+          wrapper.appendChild(circle);
+
+          if (waypoint.icon || waypoint.desc) {
+            const pill = document.createElement("div");
+            pill.className =
+              "flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium";
+            pill.style.borderColor = "rgba(74, 174, 105, 0.45)";
+            pill.style.boxShadow = "0 4px 12px rgba(44, 45, 94, 0.1)";
+            if (waypoint.icon) {
+              const iconSpan = document.createElement("span");
+              iconSpan.textContent = waypoint.icon;
+              pill.appendChild(iconSpan);
+            }
+            if (waypoint.desc) {
+              const descSpan = document.createElement("span");
+              descSpan.textContent = waypoint.desc;
+              pill.appendChild(descSpan);
+            }
+            wrapper.appendChild(pill);
+          }
+
+          wrapper.addEventListener("click", (event) => {
+            event.stopPropagation();
+            highlightPoint(pointIndex);
+            const point = track.points[pointIndex];
+            handleCoordinateSelection(point.lat, point.lon);
+          });
+
+          overlay.appendChild(wrapper);
+        });
+      };
+
+      renderOverlay();
+
       const canvas = chartCanvasRef.current;
 
       const handleMove = (event: MouseEvent) => {
@@ -716,15 +895,43 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         chartInstance.update();
       };
 
+      const handleClick = (event: MouseEvent) => {
+        if (!chartRef.current?.getElementsAtEventForMode) {
+          return;
+        }
+        const elements = chartRef.current.getElementsAtEventForMode(
+          event,
+          "nearest",
+          { intersect: false },
+          false,
+        );
+        if (!elements.length) {
+          return;
+        }
+        const [{ index }] = elements;
+        highlightPoint(index, { x: event.offsetX, y: event.offsetY });
+        const point = track.points[index];
+        handleCoordinateSelection(point.lat, point.lon);
+      };
+
+      const handleResize = () => {
+        renderOverlay();
+      };
+
       canvas.addEventListener("mousemove", handleMove);
       canvas.addEventListener("mouseleave", handleLeave);
+      canvas.addEventListener("click", handleClick);
+      window.addEventListener("resize", handleResize);
 
       detachListeners = () => {
         canvas.removeEventListener("mousemove", handleMove);
         canvas.removeEventListener("mouseleave", handleLeave);
+        canvas.removeEventListener("click", handleClick);
+        window.removeEventListener("resize", handleResize);
       };
 
       highlightPoint(0);
+      renderOverlay();
 
     };
 
@@ -738,7 +945,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         chartRef.current = null;
       }
     };
-  }, [track, highlightPoint]);
+  }, [track, highlightPoint, handleCoordinateSelection]);
 
   if (error) {
     return (
@@ -818,9 +1025,26 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
               Hover the chart to preview checkpoints on the map.
             </p>
           </div>
-          <div className="h-60 w-full overflow-hidden rounded-3xl border border-[color:var(--muted)]/60 bg-white/80 p-3">
+          <div className="relative h-60 w-full overflow-visible rounded-3xl border border-[color:var(--muted)]/60 bg-white/80 p-3">
             <canvas ref={chartCanvasRef} className="h-full w-full" />
+            <div ref={overlayRef} className="absolute inset-0 overflow-visible" />
           </div>
+        </div>
+      ) : null}
+
+      {selectedCoords ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--muted)]/60 bg-white/80 px-4 py-3 text-sm text-[color:var(--ink)]/70">
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">Coordinates</span>
+            <code className="text-base font-semibold text-[color:var(--ink)]">{selectedCoords}</code>
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyCoordinates}
+            className="inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent)]/10"
+          >
+            {copyState === "copied" ? "Copied!" : copyState === "error" ? "Copy failed" : "Copy"}
+          </button>
         </div>
       ) : null}
     </section>
