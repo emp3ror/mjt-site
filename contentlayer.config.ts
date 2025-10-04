@@ -30,11 +30,12 @@ export const Post = defineDocumentType(() => ({
     date: { type: "date", required: true },
     category: {
       type: "enum",
-      options: ["tech", "personal", "art"],
+      options: ["tech", "art", "politics", "art-study", "personal"],
       required: true,
     },
     tags: { type: "list", of: { type: "string" }, required: true },
     cover: { type: "string", required: false },
+    featured: { type: "boolean", required: false },
   },
   computedFields,
 }));
