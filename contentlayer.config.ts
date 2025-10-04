@@ -30,19 +30,33 @@ export const Post = defineDocumentType(() => ({
     date: { type: "date", required: true },
     category: {
       type: "enum",
-      options: ["tech", "art", "politics", "art-study", "personal"],
+      options: ["tech", "art", "politics", "art-study", "personal", "hike"],
       required: true,
     },
     tags: { type: "list", of: { type: "string" }, required: true },
     cover: { type: "string", required: false },
     featured: { type: "boolean", required: false },
+    template: { type: "string", required: false },
+    gpx: { type: "string", required: false },
   },
   computedFields,
 }));
 
+export const PostsOverview = defineDocumentType(() => ({
+  name: "PostsOverview",
+  filePathPattern: "posts/index.mdx",
+  contentType: "mdx",
+  fields: {
+    title: { type: "string", required: true },
+    intro: { type: "string", required: false },
+    description: { type: "string", required: false },
+    updated: { type: "date", required: false },
+  },
+}));
+
 export default makeSource({
   contentDirPath: "content",
-  documentTypes: [Post],
+  documentTypes: [Post, PostsOverview],
   mdx: {
     remarkPlugins: [],
     rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]],

@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Baloo_2, Inter } from "next/font/google";
 import "./globals.css";
 
 import { Footer } from "@/components/footer";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import { Header } from "@/components/header";
+const baloo = Baloo_2({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-display",
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -34,10 +35,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[color:var(--background)] text-[color:var(--foreground)]`}
-      >
+      <body className={`${baloo.variable} ${inter.variable} antialiased font-sans`}>
         <div className="flex min-h-screen flex-col">
+          <Header />
           <main className="flex-1">{children}</main>
           <Footer />
         </div>

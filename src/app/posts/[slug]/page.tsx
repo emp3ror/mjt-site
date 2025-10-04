@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HikeMap } from "@/components/maps/hike-map";
 import { cache } from "react";
 
 import { compileMDX } from "next-mdx-remote/rsc";
@@ -85,6 +86,7 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const content = await renderMdx(post.body.raw);
+  const showHikeMap = post.template === "hike" && Boolean(post.gpx);
 
   return (
     <article className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 pb-24 pt-16">
@@ -112,6 +114,7 @@ export default async function PostPage({ params }: PostPageProps) {
       </header>
 
       <section className="mt-12 space-y-6">
+        {showHikeMap && post.gpx ? <HikeMap gpxPath={post.gpx} /> : null}
         <MdxContainer>{content}</MdxContainer>
       </section>
     </article>

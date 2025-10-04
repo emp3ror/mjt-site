@@ -1,43 +1,54 @@
 import Link from "next/link";
 
+import { DoodleDivider } from "@/components/doodle-divider";
+
 const navigation = [
+  { label: "Portfolio", href: "#works" },
+  { label: "Experience", href: "#experience" },
   { label: "Art College", href: "/art-college" },
-  { label: "Latest posts", href: "/#recent-work" },
-  { label: "Browse tags", href: "/tags" },
+  { label: "Latest Notes", href: "#latest-notes" },
 ];
 
 const socials = [
   { label: "Email", href: "mailto:hello@mjt.studio" },
-  { label: "GitHub", href: "https://github.com/manishjungthapa" },
+  { label: "Behance", href: "https://www.behance.net" },
+  { label: "Dribbble", href: "https://dribbble.com" },
   { label: "Instagram", href: "https://www.instagram.com" },
+  { label: "LinkedIn", href: "https://www.linkedin.com" },
 ];
 
 export function Footer() {
   return (
-    <footer className="border-t border-neutral-200/70 bg-white/70 backdrop-blur dark:border-neutral-800/60 dark:bg-neutral-950/60">
-      <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12 md:flex-row md:justify-between">
-        <div className="max-w-md space-y-3">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Manish Jung Thapa
-          </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">
-            Building fast, human web experiences and keeping the sketchbook open.
-            Thanks for visiting the studio log.
+    <footer className="relative mt-24 overflow-hidden rounded-t-[3rem] bg-[color:var(--ink)] text-white/90">
+      <div className="absolute inset-x-0 top-0">
+        <DoodleDivider variant="line" colorClassName="text-white/20" />
+      </div>
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-12 px-6 pb-14 pt-20 md:flex-row md:items-start md:justify-between">
+        <div className="max-w-xl space-y-5">
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
+            MJT Studio
           </p>
-          <p className="text-xs uppercase tracking-[0.25em] text-neutral-400">
+          <h2 className="text-4xl font-semibold text-white">
+            Staying playful while shipping thoughtful design systems.
+          </h2>
+          <p className="text-sm text-white/80">
+            Portfolio snapshots, art studies, and experiments in community-led design.
+            Come back often; the sketchbook is always open.
+          </p>
+          <p className="text-xs uppercase tracking-[0.35em] text-white/60">
             © {new Date().getFullYear()} MJT Studio
           </p>
         </div>
 
-        <div className="grid flex-1 gap-8 sm:grid-cols-2 md:max-w-md">
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
+        <div className="grid w-full max-w-md gap-10 sm:grid-cols-2">
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
               Navigate
             </h3>
-            <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <ul className="space-y-3 text-sm text-white/75">
               {navigation.map((item) => (
                 <li key={item.href}>
-                  <Link className="transition hover:text-blue-600 dark:hover:text-blue-400" href={item.href}>
+                  <Link className="transition hover:text-[color:var(--leaf)]/80" href={item.href}>
                     {item.label}
                   </Link>
                 </li>
@@ -45,15 +56,15 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
               Connect
             </h3>
-            <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <ul className="space-y-3 text-sm text-white/75">
               {socials.map((item) => (
                 <li key={item.href}>
                   <Link
-                    className="transition hover:text-blue-600 dark:hover:text-blue-400"
+                    className="transition hover:text-[color:var(--leaf)]/80"
                     href={item.href}
                     target={item.href.startsWith("http") ? "_blank" : undefined}
                     rel={item.href.startsWith("http") ? "noreferrer" : undefined}
@@ -66,7 +77,7 @@ export function Footer() {
           </div>
         </div>
       </div>
+      <div className="absolute -bottom-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-white/10 blur-3xl" aria-hidden />
     </footer>
   );
 }
-

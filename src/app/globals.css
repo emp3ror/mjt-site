@@ -1,22 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fff7f0;
+  --foreground: #2c2d5e;
+  --ink: #2c2d5e;
+  --accent: #f25c27;
+  --muted: #b6b9d3;
+  --leaf: #4aae69;
+  --surface: rgba(255, 255, 255, 0.78);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-leaf: var(--leaf);
+  --color-surface: var(--surface);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
 }
 
 html {
@@ -27,8 +30,46 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   margin: 0;
+  min-height: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(242, 92, 39, 0.12) 0, rgba(242, 92, 39, 0) 60%),
+    radial-gradient(circle at 85% 20%, rgba(74, 174, 105, 0.1) 0, rgba(74, 174, 105, 0) 55%),
+    radial-gradient(circle at 50% 85%, rgba(182, 185, 211, 0.28) 0, rgba(182, 185, 211, 0) 65%);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+  z-index: -1;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.4;
+  z-index: -1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display), "Baloo 2", cursive;
+  color: var(--ink);
 }
 
 a {
@@ -37,13 +78,15 @@ a {
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
-  outline: 2px solid currentColor;
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 .mdx-content {
   display: block;
+  color: var(--foreground);
 }
 
 .mdx-content > *:first-child {
