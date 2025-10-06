@@ -38,6 +38,7 @@ export const Post = defineDocumentType(() => ({
     featured: { type: "boolean", required: false },
     template: { type: "string", required: false },
     gpx: { type: "string", required: false },
+    checkpoints: { type: "json", required: false },
   },
   computedFields,
 }));

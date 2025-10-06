@@ -1,5 +1,34 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Contact form configuration
+
+Create a `.env.local` file to configure spam protection and message delivery for the contact form.
+
+```
+NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY=""
+GOOGLE_RECAPTCHA_SECRET_KEY=""
+
+# Comma separated list of notification targets.
+CONTACT_NOTIFICATION_TARGETS="slack,discord"
+
+# Slack
+SLACK_WEBHOOK_URL=""
+
+# Discord
+DISCORD_WEBHOOK_URL=""
+
+# Telegram
+TELEGRAM_BOT_TOKEN=""
+TELEGRAM_CHAT_ID=""
+
+# WhatsApp Cloud API
+WHATSAPP_ACCESS_TOKEN=""
+WHATSAPP_PHONE_NUMBER_ID=""
+WHATSAPP_RECIPIENT_PHONE=""
+```
+
+Only the environment variables for the targets listed in `CONTACT_NOTIFICATION_TARGETS` are required. The contact API validates Google reCAPTCHA tokens with the provided secret before sending the message to the configured destinations.
+
 ## Getting Started
 
 First, run the development server:

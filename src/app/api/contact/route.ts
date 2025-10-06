@@ -1,13 +1,102 @@
 import { NextResponse } from "next/server";
 
+import { notifyContactChannels } from "@/lib/contact-notifier";
+import { z } from "zod";
+
+const RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
+
+const contactFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required.").max(200, "Name is too long."),
+  email: z.string().trim().min(1, "Email is required.").email("Provide a valid email address."),
+  message: z.string().trim().min(1, "Message is required.").max(5000, "Message is too long."),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required."),
+});
+
+const recaptchaEnvSchema = z.object({
+  GOOGLE_RECAPTCHA_SECRET_KEY: z.string().min(1, "GOOGLE_RECAPTCHA_SECRET_KEY is missing."),
+});
+
+function getStringValue(value: FormDataEntryValue | null) {
+  return typeof value === "string" ? value : undefined;
+}
+
 export async function POST(request: Request) {
   const payload = await request.formData();
 
-  const name = payload.get("name");
-  const email = payload.get("email");
-  const message = payload.get("message");
+  const parsedPayload = contactFormSchema.safeParse({
+    name: getStringValue(payload.get("name")) ?? "",
+    email: getStringValue(payload.get("email")) ?? "",
+    message: getStringValue(payload.get("message")) ?? "",
+    recaptchaToken: getStringValue(payload.get("g-recaptcha-response")) ?? "",
+  });
 
-  console.log("Contact form submission", { name, email, message });
+  if (!parsedPayload.success) {
+    return NextResponse.json(
+      {
+        error: "Invalid form submission.",
+        issues: parsedPayload.error.flatten().fieldErrors,
+      },
+      { status: 400 },
+    );
+  }
 
-  return NextResponse.json({ received: true });
+  const { name, email, message, recaptchaToken } = parsedPayload.data;
+
+  const parsedEnv = recaptchaEnvSchema.safeParse({
+    GOOGLE_RECAPTCHA_SECRET_KEY: process.env.GOOGLE_RECAPTCHA_SECRET_KEY ?? "",
+  });
+
+  if (!parsedEnv.success) {
+    return NextResponse.json(
+      {
+        error: "reCAPTCHA server secret is not configured.",
+        issues: parsedEnv.error.flatten().fieldErrors,
+      },
+      { status: 500 },
+    );
+  }
+
+  const { GOOGLE_RECAPTCHA_SECRET_KEY: recaptchaSecret } = parsedEnv.data;
+
+  const verificationResponse = await fetch(RECAPTCHA_VERIFY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ secret: recaptchaSecret, response: recaptchaToken }),
+  });
+
+  if (!verificationResponse.ok) {
+    return NextResponse.json({ error: "Failed to verify reCAPTCHA." }, { status: 502 });
+  }
+
+  const verification = (await verificationResponse.json()) as {
+    success?: boolean;
+    score?: number;
+    action?: string;
+    "error-codes"?: string[];
+  };
+
+  if (!verification.success) {
+    return NextResponse.json(
+      {
+        error: "reCAPTCHA verification failed.",
+        details: verification["error-codes"] ?? null,
+      },
+      { status: 400 },
+    );
+  }
+
+  const notificationResults = await notifyContactChannels({ name, email, message });
+  const delivered = notificationResults.filter((result) => result.ok);
+
+  if (notificationResults.length > 0 && delivered.length === 0) {
+    return NextResponse.json(
+      {
+        error: "Unable to deliver the message to the configured channel(s).",
+        results: notificationResults,
+      },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json({ received: true, results: notificationResults });
 }

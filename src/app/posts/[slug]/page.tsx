@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HikeMap } from "@/components/maps/hike-map";
+import type { HikeCheckpointInput } from "@/components/maps/hike-map";
 import { cache } from "react";
 
 import { compileMDX } from "next-mdx-remote/rsc";
@@ -114,7 +115,12 @@ export default async function PostPage({ params }: PostPageProps) {
       </header>
 
       <section className="mt-12 space-y-6">
-        {showHikeMap && post.gpx ? <HikeMap gpxPath={post.gpx} /> : null}
+        {showHikeMap && post.gpx ? (
+          <HikeMap
+            gpxPath={post.gpx}
+            checkpoints={post.checkpoints as HikeCheckpointInput[] | undefined}
+          />
+        ) : null}
         <MdxContainer>{content}</MdxContainer>
       </section>
     </article>

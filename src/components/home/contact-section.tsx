@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 
 import { SectionHeading } from "@/components/section-heading";
 import { Sparkles, Instagram, Linkedin, Mail, Palette } from "lucide-react";
@@ -11,6 +12,8 @@ const contactSocials = [
 ];
 
 export function ContactSection() {
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY;
+
   return (
     <section id="contact" className="grid gap-8 rounded-[3rem] bg-white/80 p-10 shadow-[0_26px_80px_rgba(44,45,94,0.16)] backdrop-blur lg:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-6">
@@ -82,10 +85,22 @@ export function ContactSection() {
           Send message
           <Sparkles className="h-4 w-4" aria-hidden />
         </button>
+        {recaptchaSiteKey ? (
+          <div className="pt-2">
+            <div className="g-recaptcha" data-sitekey={recaptchaSiteKey} />
+          </div>
+        ) : (
+          <p className="text-xs text-[color:var(--ink)]/60">
+            reCAPTCHA is not configured. Provide a site key to enable spam protection.
+          </p>
+        )}
         <p className="text-xs text-[color:var(--ink)]/50">
           You will receive a copy of your message. Responses arrive within two business days.
         </p>
       </form>
+      {recaptchaSiteKey ? (
+        <Script src="https://www.google.com/recaptcha/api.js" strategy="afterInteractive" />
+      ) : null}
     </section>
   );
 }

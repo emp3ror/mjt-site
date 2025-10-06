@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -14,6 +14,14 @@ type GpxPoint = {
 type GpxWaypoint = {
   lat: number;
   lon: number;
+  name?: string;
+  desc?: string;
+  icon?: string;
+};
+
+export type HikeCheckpointInput = {
+  lat?: number;
+  lon?: number;
   name?: string;
   desc?: string;
   icon?: string;
@@ -355,9 +363,10 @@ const findClosestPointIndex = (points: GpxPoint[], targetLat: number, targetLon:
 type HikeMapProps = {
   gpxPath: string;
   className?: string;
+  checkpoints?: HikeCheckpointInput[];
 };
 
-export function HikeMap({ gpxPath, className }: HikeMapProps) {
+export function HikeMap({ gpxPath, className, checkpoints }: HikeMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const chartCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -368,6 +377,8 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
   const renderedWaypointsRef = useRef<GpxWaypoint[]>([]);
   const checkpointIndicesRef = useRef<number[]>([]);
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  const renderOverlayRef = useRef<() => void>(() => undefined);
+  const activeCheckpointRef = useRef<number | null>(null);
 
   const [track, setTrack] = useState<GpxTrack | null>(null);
   const [stats, setStats] = useState<TrackStats | null>(null);
@@ -375,16 +386,69 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedCoords, setSelectedCoords] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+  const [activeCheckpoint, setActiveCheckpoint] = useState<number | null>(null);
+  const [showCheckpoints, setShowCheckpoints] = useState(true);
 
   useEffect(() => {
     trackRef.current = track;
   }, [track]);
 
+  const providedCheckpoints = useMemo(() => {
+    if (!checkpoints || checkpoints.length === 0) {
+      return null;
+    }
+
+    return checkpoints
+      .map((entry) => {
+        const lat = Number(entry?.lat);
+        const lon = Number(entry?.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          return null;
+        }
+
+        return {
+          lat,
+          lon,
+          name: entry?.name ?? undefined,
+          desc: entry?.desc ?? undefined,
+          icon: entry?.icon ?? undefined,
+        } satisfies GpxWaypoint;
+      })
+      .filter((value): value is GpxWaypoint => Boolean(value));
+  }, [checkpoints]);
+
+
+const updateActiveCheckpoint = useCallback((value: number | null) => {
+    activeCheckpointRef.current = value;
+    setActiveCheckpoint(value);
+  }, []);
   const handleCoordinateSelection = useCallback((lat: number, lon: number) => {
     const formatted = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
     setSelectedCoords(formatted);
     setCopyState("idle");
-  }, []);
+
+    if (renderedWaypointsRef.current.length > 0) {
+      let closestIndex: number | null = null;
+      let minDistance = Number.POSITIVE_INFINITY;
+
+      renderedWaypointsRef.current.forEach((checkpoint, idx) => {
+        const distance = Math.hypot(checkpoint.lat - lat, checkpoint.lon - lon);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = idx;
+        }
+      });
+
+      if (closestIndex !== null && minDistance < 0.002 && showCheckpoints) {
+        updateActiveCheckpoint(closestIndex);
+        renderOverlayRef.current();
+        return;
+      }
+    }
+
+    updateActiveCheckpoint(null);
+    renderOverlayRef.current();
+  }, [updateActiveCheckpoint, showCheckpoints]);
 
   const handleCopyCoordinates = useCallback(async () => {
     if (!selectedCoords) {
@@ -410,6 +474,28 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
     return () => window.clearTimeout(timeout);
   }, [copyState]);
 
+
+
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (chart) {
+      chart.setDatasetVisibility(1, showCheckpoints);
+      chart.update();
+    }
+
+    if (!showCheckpoints) {
+      updateActiveCheckpoint(null);
+    }
+
+    renderOverlayRef.current();
+  }, [showCheckpoints, updateActiveCheckpoint]);
+  useEffect(() => {
+    renderOverlayRef.current();
+  }, [activeCheckpoint]);
+
+  
+
   const highlightPoint = useCallback((index: number, eventPosition?: { x: number; y: number }) => {
     const currentTrack = trackRef.current;
     if (!currentTrack?.points.length) {
@@ -426,14 +512,14 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
     const chart = chartRef.current;
     if (chart?.setActiveElements) {
       const activeElements: ChartActiveElement[] = [{ datasetIndex: 0, index: clampedIndex }];
-      if (checkpointIndicesRef.current.includes(clampedIndex)) {
+      if (showCheckpoints && checkpointIndicesRef.current.includes(clampedIndex)) {
         activeElements.push({ datasetIndex: 1, index: clampedIndex });
       }
       chart.setActiveElements(activeElements, eventPosition);
       chart.tooltip?.setActiveElements?.(activeElements, eventPosition);
       chart.update();
     }
-  }, []);
+  }, [showCheckpoints]);
 
   useEffect(() => {
     let cancelled = false;
@@ -586,7 +672,12 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         ].filter(Boolean) as GpxWaypoint[]
       : [];
 
-    const waypointsToRender = track.waypoints.length ? track.waypoints : fallbackWaypoints;
+    const waypointsToRender =
+      providedCheckpoints && providedCheckpoints.length > 0
+        ? providedCheckpoints
+        : track.waypoints.length
+          ? track.waypoints
+          : fallbackWaypoints;
     renderedWaypointsRef.current = waypointsToRender;
 
     waypointsToRender.forEach((waypoint) => {
@@ -645,7 +736,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         overlay.remove();
       });
     };
-  }, [track, highlightPoint, handleCoordinateSelection]);
+  }, [track, highlightPoint, handleCoordinateSelection, providedCheckpoints, updateActiveCheckpoint, showCheckpoints]);
 
   useEffect(() => {
     let cancelled = false;
@@ -710,6 +801,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
               label: "Checkpoints",
               data: checkpointHeights,
               showLine: false,
+              hidden: !showCheckpoints,
               pointRadius(context) {
                 const value = context.raw as number | null;
                 return value === null ? 0 : 6;
@@ -789,6 +881,10 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         overlay.style.pointerEvents = "none";
         overlay.style.zIndex = "1";
 
+        if (!showCheckpoints) {
+          return;
+        }
+
         const chartAny = chart as unknown as {
           scales: {
             x: { getPixelForValue: (value: number) => number };
@@ -800,7 +896,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         const chartTop = chartAny.chartArea.top;
         const chartBottom = chartAny.chartArea.bottom;
 
-                renderedWaypointsRef.current.forEach((waypoint, waypointIdx) => {
+        renderedWaypointsRef.current.forEach((waypoint, waypointIdx) => {
           const pointIndex = waypointIndices[waypointIdx];
           if (pointIndex === undefined) {
             return;
@@ -808,6 +904,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
 
           const baseX = chartAny.scales.x.getPixelForValue(pointIndex);
           const markerX = baseX + 10;
+          const isActive = activeCheckpointRef.current === waypointIdx;
 
           const line = document.createElement("div");
           line.className = "pointer-events-none absolute w-px";
@@ -823,8 +920,9 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
             "absolute flex cursor-pointer flex-col items-center gap-2 text-[color:var(--ink)]";
           wrapper.style.left = `${markerX}px`;
           wrapper.style.top = `${Math.max(chartTop - 120, 0)}px`;
-          wrapper.style.transform = "translateX(-50%)";
+          wrapper.style.transform = "translateX(calc(-50% + 10px))";
           wrapper.style.pointerEvents = "auto";
+          wrapper.style.zIndex = isActive ? "3" : "2";
 
           const circle = document.createElement("div");
           circle.className =
@@ -848,7 +946,11 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
             if (waypoint.desc) {
               const descSpan = document.createElement("span");
               descSpan.textContent = waypoint.desc;
+              descSpan.style.display = isActive ? "inline" : "none";
               pill.appendChild(descSpan);
+            }
+            if (!waypoint.icon && waypoint.desc && !isActive) {
+              pill.style.display = "none";
             }
             wrapper.appendChild(pill);
           }
@@ -858,13 +960,15 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
             highlightPoint(pointIndex);
             const point = track.points[pointIndex];
             handleCoordinateSelection(point.lat, point.lon);
+            updateActiveCheckpoint(waypointIdx);
+            renderOverlayRef.current();
           });
 
           overlay.appendChild(wrapper);
         });
       };
 
-      renderOverlay();
+      renderOverlayRef.current = renderOverlay;
 
       const canvas = chartCanvasRef.current;
 
@@ -912,6 +1016,9 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         highlightPoint(index, { x: event.offsetX, y: event.offsetY });
         const point = track.points[index];
         handleCoordinateSelection(point.lat, point.lon);
+        const checkpointIdx = checkpointIndicesRef.current.indexOf(index);
+        updateActiveCheckpoint(checkpointIdx >= 0 ? checkpointIdx : null);
+        renderOverlayRef.current();
       };
 
       const handleResize = () => {
@@ -945,7 +1052,7 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
         chartRef.current = null;
       }
     };
-  }, [track, highlightPoint, handleCoordinateSelection]);
+  }, [track, highlightPoint, handleCoordinateSelection, providedCheckpoints, updateActiveCheckpoint, showCheckpoints]);
 
   if (error) {
     return (
@@ -1017,15 +1124,26 @@ export function HikeMap({ gpxPath, className }: HikeMapProps) {
 
       {track?.points.length ? (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--ink)]/60">
-              Elevation profile
-            </h3>
-            <p className="text-xs text-[color:var(--ink)]/50">
-              Hover the chart to preview checkpoints on the map.
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--ink)]/60">
+                Elevation profile
+              </h3>
+              <p className="text-xs text-[color:var(--ink)]/50">
+                Hover the chart to preview checkpoints on the map.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--ink)]/50">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-[color:var(--muted)]/60"
+                checked={showCheckpoints}
+                onChange={(event) => setShowCheckpoints(event.target.checked)}
+              />
+              Show checkpoints
+            </label>
           </div>
-          <div className="relative h-60 w-full overflow-visible rounded-3xl border border-[color:var(--muted)]/60 bg-white/80 p-3">
+          <div className="relative h-[20rem] w-full overflow-visible rounded-3xl border border-[color:var(--muted)]/60 bg-white/80 p-4">
             <canvas ref={chartCanvasRef} className="h-full w-full" />
             <div ref={overlayRef} className="absolute inset-0 overflow-visible" />
           </div>
