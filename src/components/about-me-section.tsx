@@ -32,7 +32,7 @@ export default function AboutMeSection() {
             About Me
           </h2>
           <p className="max-w-2xl text-base text-neutral-600 dark:text-neutral-300">
-            I wear many hats—developer, artist, runner, and community builder.
+            I am a software developer first—also an artist, runner, and community member staying involved.
           </p>
         </header>
 
@@ -60,4 +60,3 @@ export default function AboutMeSection() {
     </section>
   );
 }
-

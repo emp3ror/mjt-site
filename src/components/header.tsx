@@ -26,10 +26,7 @@ export function Header() {
           href="/"
           className="relative flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-[color:var(--ink)] shadow-[0_10px_30px_rgba(44,45,94,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(44,45,94,0.12)]"
         >
-          <span className="relative">
-            MJT Studio
-            <span className="absolute -bottom-1 left-0 h-2 w-full rounded-full bg-[color:var(--accent)]/30" aria-hidden />
-          </span>
+          MJT Studio
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">

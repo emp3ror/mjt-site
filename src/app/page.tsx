@@ -1,4 +1,5 @@
 import { DoodleDivider } from "@/components/doodle-divider";
+import MjtBanner from "@/components/mjt-banner";
 import { HeroSection } from "@/components/home/hero-section";
 import { AboutSection } from "@/components/home/about-section";
 import { ExperienceSection } from "@/components/home/experience-section";
@@ -20,6 +21,8 @@ export default function Home() {
   return (
     <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-24 px-6 pb-24 pt-24">
       <HeroSection />
+
+      <MjtBanner />
 
       <DoodleDivider variant="cloud" colorClassName="text-[color:var(--muted)]/60" />
 
