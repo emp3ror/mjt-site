@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fff7f0;
-  --foreground: #2c2d5e;
-  --ink: #2c2d5e;
-  --accent: #f25c27;
-  --muted: #b6b9d3;
-  --leaf: #4aae69;
-  --surface: rgba(255, 255, 255, 0.78);
+  --background: #dce1ef;
+  --foreground: #626095;
+  --ink: #626095;
+  --accent: #f2968a;
+  --highlight: #f2968a;
+  --base: #fefbfb;
+  --muted: #b4b8d9;
+  --leaf: #6ca8b7;
+  --surface: rgba(254, 251, 251, 0.85);
 }
 
 @theme inline {
@@ -15,6 +17,8 @@
   --color-foreground: var(--foreground);
   --color-ink: var(--ink);
   --color-accent: var(--accent);
+  --color-highlight: var(--highlight);
+  --color-base: var(--base);
   --color-muted: var(--muted);
   --color-leaf: var(--leaf);
   --color-surface: var(--surface);
@@ -43,9 +47,9 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 15% 10%, rgba(242, 92, 39, 0.12) 0, rgba(242, 92, 39, 0) 60%),
-    radial-gradient(circle at 85% 20%, rgba(74, 174, 105, 0.1) 0, rgba(74, 174, 105, 0) 55%),
-    radial-gradient(circle at 50% 85%, rgba(182, 185, 211, 0.28) 0, rgba(182, 185, 211, 0) 65%);
+    radial-gradient(circle at 15% 10%, rgba(242, 150, 138, 0.22) 0, rgba(242, 150, 138, 0) 60%),
+    radial-gradient(circle at 85% 20%, rgba(108, 168, 183, 0.18) 0, rgba(108, 168, 183, 0) 55%),
+    radial-gradient(circle at 50% 85%, rgba(112, 112, 165, 0.18) 0, rgba(98, 96, 149, 0) 65%);
   mix-blend-mode: multiply;
   opacity: 0.6;
   z-index: -1;
@@ -69,7 +73,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display), "Baloo 2", cursive;
-  color: var(--ink);
+  color: var(--highlight);
 }
 
 a {
@@ -98,9 +102,20 @@ textarea:focus-visible {
   padding: 0;
 }
 
+.mjt-wrapper {
+  padding: 5rem 10rem;
+}
+
+@media screen and (max-width: 800px) {
+  .mjt-wrapper {
+    padding: 0;
+  }
+  
+}
+
 .mjt-banner__title {
   font-family: Arial, sans-serif;
-  font-size: clamp(10rem, 23vw, 28rem);
+  font-size: clamp(12rem, 28vw, 32rem);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -114,8 +129,26 @@ textarea:focus-visible {
   paint-order: stroke fill;
 }
 
+.icon-canvas {
+  color: #C4C9DD;
+  opacity: 0.3;
+}
+
 @keyframes mjt-outline-draw {
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+.drift {
+  animation: drift 10s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translateY(-6px);
+  }
+  to {
+    transform: translateY(6px);
   }
 }

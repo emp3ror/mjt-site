@@ -1,9 +1,3 @@
-Here’s a copy-paste **super-prompt** you can drop into VSCode ChatGPT (or similar) to scaffold a Next.js theme that matches the portfolio look you shared.
-
----
-
-### Prompt to generate the theme (paste everything below)
-
 **Role**: You are a senior Next.js/Tailwind engineer and brand designer.
 **Goal**: Build a playful, illustration-friendly **portfolio theme** matching this aesthetic: warm cream background, orange highlights, navy text, quirky headings, doodle dividers, mixed illustration + photography.
 
@@ -37,43 +31,6 @@ Here’s a copy-paste **super-prompt** you can drop into VSCode ChatGPT (or simi
 * Hover micro-interactions; gentle entrance motions.
 
 **App structure to generate**
-
-```
-/app
-  /[locale] (optional for i18n later)
-  /api/contact/route.ts (vercel serverless email stub)
-  /components
-    Header.tsx
-    Footer.tsx
-    Container.tsx
-    DoodleDivider.tsx (SVG patterns w/ props: variant="cloud|lotus|line")
-    SectionHeading.tsx
-    Badge.tsx
-    Timeline.tsx
-    SkillBar.tsx
-    Card.tsx
-    PhotoIllustration.tsx (image + svg mask collage)
-  /sections
-    Hero.tsx
-    About.tsx
-    Experience.tsx
-    Skills.tsx
-    Works.tsx
-    Testimonials.tsx
-    Contact.tsx
-  /content
-    site.json       (name, socials, nav)
-    hero.json       (title, subtitle, cta)
-    about.mdx
-    experience.json (timeline items)
-    skills.json     (groups + levels)
-    works.json      (projects grid)
-    testimonials.json
-  globals.css
-  layout.tsx
-  page.tsx
-/tailwind.config.ts
-```
 
 **Section specs**
 

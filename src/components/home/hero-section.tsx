@@ -19,50 +19,52 @@ const heroBadges = [
 
 export function HeroSection() {
   return (
-    <section className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="space-y-8">
-        <Badge className="bg-white/80 text-[color:var(--accent)]">
-          Playful designer developer
-        </Badge>
-        <h1 className="text-5xl font-semibold leading-[1.05] text-[color:var(--ink)] md:text-6xl">
-          Translating joyful ideas into packaging, illustration, and fast digital experiences.
-        </h1>
-        <p className="max-w-2xl text-lg text-[color:var(--ink)]/75">
-          Hi, I am Manish--balancing tactile print design with web systems that stay friendly and accessible.
-          The portfolio is an ever-growing sketchbook featuring client launches, art college studies, and
-          community projects.
-        </p>
+    <section className="w-full bg-[color:var(--base)] py-16 sm:py-20">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 sm:px-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-8">
+          <Badge className="bg-white/80 text-[color:var(--accent)]">
+            Playful designer developer
+          </Badge>
+          <h1 className="text-5xl font-semibold leading-[1.05] text-[color:var(--ink)] md:text-6xl">
+            Translating joyful ideas into packaging, illustration, and fast digital experiences.
+          </h1>
+          <p className="max-w-2xl text-lg text-[color:var(--ink)]/75">
+            Hi, I am Manish--balancing tactile print design with web systems that stay friendly and accessible.
+            The portfolio is an ever-growing sketchbook featuring client launches, art college studies, and
+            community projects.
+          </p>
 
-        <div className="flex flex-wrap gap-4">
-          <Link
-            href="#works"
-            className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(242,92,39,0.3)] transition hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(242,92,39,0.35)]"
-          >
-            View projects
-            <ArrowUpRight className="h-4 w-4" aria-hidden />
-          </Link>
-          <Link
-            href="#contact"
-            className="inline-flex items-center gap-2 rounded-full border border-[color:var(--muted)]/60 bg-white/70 px-6 py-3 text-sm font-semibold text-[color:var(--ink)] shadow-[0_12px_28px_rgba(44,45,94,0.12)] transition hover:-translate-y-1 hover:bg-white"
-          >
-            Let&apos;s collaborate
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="#works"
+              className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(242,92,39,0.3)] transition hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(242,92,39,0.35)]"
+            >
+              View projects
+              <ArrowUpRight className="h-4 w-4" aria-hidden />
+            </Link>
+            <Link
+              href="#contact"
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--muted)]/60 bg-white/70 px-6 py-3 text-sm font-semibold text-[color:var(--ink)] shadow-[0_12px_28px_rgba(44,45,94,0.12)] transition hover:-translate-y-1 hover:bg-white"
+            >
+              Let&apos;s collaborate
+            </Link>
+          </div>
+
+          <ul className="flex flex-wrap gap-3 text-sm font-semibold text-[color:var(--ink)]/80">
+            {heroBadges.map(({ label, icon: Icon }) => (
+              <li
+                key={label}
+                className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-[0_12px_30px_rgba(44,45,94,0.12)]"
+              >
+                <Icon className="h-4 w-4 text-[color:var(--accent)]" aria-hidden />
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <ul className="flex flex-wrap gap-3 text-sm font-semibold text-[color:var(--ink)]/80">
-          {heroBadges.map(({ label, icon: Icon }) => (
-            <li
-              key={label}
-              className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-[0_12px_30px_rgba(44,45,94,0.12)]"
-            >
-              <Icon className="h-4 w-4 text-[color:var(--accent)]" aria-hidden />
-              {label}
-            </li>
-          ))}
-        </ul>
+        <PhotoIllustration className="justify-self-center" />
       </div>
-
-      <PhotoIllustration className="justify-self-center" />
     </section>
   );
 }

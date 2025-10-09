@@ -19,28 +19,27 @@ export default function Home() {
   const latestPosts = posts.slice(0, 3) as EnhancedPost[];
 
   return (
-    <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-24 px-6 pb-24 pt-24">
+    <main className="flex flex-col gap-0 pb-24">
+      <MjtBanner />
       <HeroSection />
 
-      <MjtBanner />
-
-      <DoodleDivider variant="cloud" colorClassName="text-[color:var(--muted)]/60" />
+      {/* <DoodleDivider variant="cloud" colorClassName="text-[color:var(--muted)]/60" /> */}
 
       <AboutSection />
 
-      <ExperienceSection />
+      {/* <ExperienceSection /> */}
 
-      <SkillsSection />
+      {/* <SkillsSection /> */}
 
-      <DoodleDivider variant="lotus" colorClassName="text-[color:var(--accent)]/50" />
+      {/* <DoodleDivider variant="lotus" colorClassName="text-[color:var(--accent)]/50" /> */}
 
-      <WorksSection />
+      {/* <WorksSection /> */}
 
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
 
       <LatestNotesSection posts={latestPosts} />
 
       <ContactSection />
-    </div>
+    </main>
   );
 }
