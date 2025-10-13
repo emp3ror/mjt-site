@@ -1,26 +1,14 @@
 import { Card } from "@/components/card";
 import { SectionHeading } from "@/components/section-heading";
+import testimonialsJson from "@/data/testimonials.json";
 
-const testimonials = [
-  {
-    name: "Asha Khatri",
-    role: "Creative Director, Studio Kathmandu",
-    quote:
-      "Manish choreographs typography, illustration, and code into a single rhythm. Every delivery feels joyful and intentional.",
-  },
-  {
-    name: "Ravi Pradhan",
-    role: "Founder, Neighborhood Library",
-    quote:
-      "From wayfinding to web, the experience felt handcrafted. Our volunteers still talk about the color stories he proposed.",
-  },
-  {
-    name: "Mina Gurung",
-    role: "Game Producer, Cozy Corner",
-    quote:
-      "The game assets captured warmth and narrative. Iterations were fast, collaborative, and deeply considered.",
-  },
-];
+type Testimonial = {
+  name: string;
+  role: string;
+  quote: string;
+};
+
+const testimonials = testimonialsJson as Testimonial[];
 
 export function TestimonialsSection() {
   return (

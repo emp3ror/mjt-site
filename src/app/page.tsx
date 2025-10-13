@@ -19,9 +19,9 @@ export default function Home() {
   const latestPosts = posts.slice(0, 3) as EnhancedPost[];
 
   return (
-    <main className="flex flex-col gap-0 pb-24">
+    <main className="flex flex-col gap-0">
       <MjtBanner />
-      <HeroSection />
+      {/* <HeroSection /> */}
 
       {/* <DoodleDivider variant="cloud" colorClassName="text-[color:var(--muted)]/60" /> */}
 

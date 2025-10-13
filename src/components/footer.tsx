@@ -19,7 +19,7 @@ const socials = [
 
 export function Footer() {
   return (
-    <footer className="relative mt-24 overflow-hidden rounded-t-[3rem] bg-[color:var(--ink)] text-white/90">
+    <footer className="relative overflow-hidden bg-[color:var(--ink)] text-white/90">
       <div className="absolute inset-x-0 top-0">
         <DoodleDivider variant="line" colorClassName="text-white/20" />
       </div>

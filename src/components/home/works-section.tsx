@@ -4,68 +4,38 @@ import Link from "next/link";
 import { Card } from "@/components/card";
 import { SectionHeading } from "@/components/section-heading";
 import { ArrowUpRight } from "lucide-react";
+import worksSectionContent from "@/data/home/works-section.json";
 
-const works = [
-  {
-    title: "Sunrise Sips Packaging",
-    category: "Packaging",
-    description: "A fizzy morning beverage campaign layered with doodled fruit bursts and collage photography.",
-    cover: "https://picsum.photos/seed/sunrise-sips/800/600",
-    tags: ["Packaging", "Illustration", "Print"],
-    link: "/art-college",
-  },
-  {
-    title: "Neighborhood Library Microsite",
-    category: "Graphic",
-    description: "Modular web components built for a volunteer-led library network with community spotlights.",
-    cover: "https://picsum.photos/seed/library-web/800/600",
-    tags: ["Web", "Design System", "Next.js"],
-    link: "/posts",
-  },
-  {
-    title: "Festival Identity Kit",
-    category: "Illustration",
-    description: "Illustrated flora, friendly typography, and signage for a week-long arts festival.",
-    cover: "https://picsum.photos/seed/lotus-festival/800/600",
-    tags: ["Illustration", "Branding", "Wayfinding"],
-    link: "/art-college/first-year",
-  },
-  {
-    title: "Cozy Corner Game Assets",
-    category: "2D Game",
-    description: "Hand-painted tilesets and UI overlays for a slice-of-life mobile game prototype.",
-    cover: "https://picsum.photos/seed/cozy-corner/800/600",
-    tags: ["Game Art", "UI", "Concept"],
-    link: "/posts",
-  },
-  {
-    title: "Studio Notebook Series",
-    category: "Illustration",
-    description: "Risograph notebook covers celebrating gesture studies and color theory drills.",
-    cover: "https://picsum.photos/seed/studio-notes/800/600",
-    tags: ["Print", "Illustration"],
-    link: "/art-college",
-  },
-  {
-    title: "Village Market Rebrand",
-    category: "Packaging",
-    description: "A farm-to-table identity with illustrated produce stamps and responsive menu boards.",
-    cover: "https://picsum.photos/seed/village-market/800/600",
-    tags: ["Packaging", "Brand"],
-    link: "/posts",
-  },
-];
+type WorkProject = {
+  title: string;
+  category: string;
+  description: string;
+  cover: string;
+  tags: string[];
+  link: string;
+};
+
+type WorksSectionContent = {
+  heading: {
+    eyebrow: string;
+    title: string;
+    description: string;
+  };
+  projects: WorkProject[];
+};
+
+const content = worksSectionContent as WorksSectionContent;
 
 export function WorksSection() {
   return (
     <section id="works" className="space-y-10">
       <SectionHeading
-        eyebrow="Portfolio"
-        title="Selected projects mixing illustration and photography"
-        description="A peek into the launch kits, digital experiences, and storytelling experiments from the studio."
+        eyebrow={content.heading.eyebrow}
+        title={content.heading.title}
+        description={content.heading.description}
       />
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {works.map((work) => (
+        {content.projects.map((work) => (
           <Card key={work.title} className="space-y-4 overflow-hidden p-0">
             <div className="relative aspect-[4/3] overflow-hidden">
               <Image

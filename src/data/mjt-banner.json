@@ -1,0 +1,17 @@
+{
+  "wordmarkTitle": "MJT wordmark banner",
+  "statement": [
+    "Sketching connections between creativity, technology, and community",
+    "through code, art, and motion."
+  ],
+  "ctas": [
+    { "label": "View projects", "href": "#works", "style": "primary" },
+    { "label": "Let's collaborate", "href": "#contact", "style": "secondary" }
+  ],
+  "heroBadges": [
+    { "label": "Packaging", "icon": "Package2" },
+    { "label": "Graphic Design", "icon": "LayoutTemplate" },
+    { "label": "Illustration", "icon": "Palette" },
+    { "label": "2D Game Art", "icon": "Gamepad2" }
+  ]
+}

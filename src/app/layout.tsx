@@ -3,7 +3,8 @@ import { Baloo_2, Inter } from "next/font/google";
 import "./globals.css";
 
 import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
+import { SubpageNavigation } from "@/components/subpage-navigation";
+import { PageSurface } from "@/components/page-surface";
 const baloo = Baloo_2({
   subsets: ["latin"],
   variable: "--font-display",
@@ -37,8 +38,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${baloo.variable} ${inter.variable} antialiased font-sans`}>
         <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
+          <SubpageNavigation />
+          <PageSurface>{children}</PageSurface>
           <Footer />
         </div>
       </body>

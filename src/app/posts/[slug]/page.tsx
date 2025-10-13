@@ -92,7 +92,7 @@ export default async function PostPage({ params }: PostPageProps) {
   return (
     <article className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 pb-24 pt-16">
       <nav className="text-sm text-neutral-500">
-        <Link className="hover:text-blue-600" href="/">
+        <Link className="hover:text-blue-600" href="/posts">
           ← Back to all notes
         </Link>
       </nav>

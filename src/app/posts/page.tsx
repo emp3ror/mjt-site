@@ -1,13 +1,12 @@
-import Link from "next/link";
 import { cache } from "react";
 
 import { compileMDX } from "next-mdx-remote/rsc";
 
 import { Badge } from "@/components/badge";
-import { Card } from "@/components/card";
 import { DoodleDivider } from "@/components/doodle-divider";
 import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
 import { SectionHeading } from "@/components/section-heading";
+import { PostCard } from "@/components/post-card";
 import type { Post, PostsOverview } from "contentlayer/generated";
 import { allPosts, allPostsOverviews } from "contentlayer/generated";
 
@@ -82,28 +81,14 @@ export default async function PostsPage() {
       {posts.length > 0 ? (
         <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {posts.map((post) => (
-            <Card key={post._id} className="h-full space-y-4">
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">
-                  {formatDate(post.date)}
-                </span>
-                <Link href={post.url} className="text-xl font-semibold text-[color:var(--ink)]">
-                  {post.title}
-                </Link>
-              </div>
-              <p className="text-sm text-[color:var(--ink)]/70">{post.description}</p>
-              <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--ink)]/55">
-                {post.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-white/70 px-3 py-1">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-[color:var(--ink)]/50">
-                <span>{post.category}</span>
-                <span>{post.readingTime}</span>
-              </div>
-            </Card>
+            <PostCard
+              key={post._id}
+              post={post}
+              className="h-full"
+              titleClassName="text-xl"
+              showTags
+              showReadingTime
+            />
           ))}
         </div>
       ) : (

@@ -1,0 +1,49 @@
+{
+  "heading": {
+    "eyebrow": "Skills",
+    "title": "Where craft meets curiosity",
+    "description": "Dynamic skill sets that flex from brand strategy to painterly explorations and UI polish."
+  },
+  "groups": [
+    {
+      "title": "Packaging Design",
+      "blurb": "Color-forward storytelling, dielines that feel friendly, and finishes that sparkle on the shelf.",
+      "accent": "accent",
+      "skills": [
+        { "label": "Concept Boards", "level": 95 },
+        { "label": "Print Production", "level": 92 },
+        { "label": "3D Mockups", "level": 85 }
+      ]
+    },
+    {
+      "title": "Graphic Design",
+      "blurb": "Editorial layouts, campaign systems, and social kits stitched together for communities.",
+      "accent": "leaf",
+      "skills": [
+        { "label": "Brand Systems", "level": 90 },
+        { "label": "Motion Loops", "level": 84 },
+        { "label": "Web Components", "level": 88 }
+      ]
+    },
+    {
+      "title": "Illustration Art",
+      "blurb": "Playful palettes, loose lines, and layered textures across digital and traditional media.",
+      "accent": "accent",
+      "skills": [
+        { "label": "Character Studies", "level": 93 },
+        { "label": "Mixed Media", "level": 89 },
+        { "label": "Editorial Spots", "level": 87 }
+      ]
+    },
+    {
+      "title": "2D Game Art",
+      "blurb": "Game-ready assets, UI kits, and atmospheric backgrounds rooted in narrative.",
+      "accent": "leaf",
+      "skills": [
+        { "label": "Sprite Sheets", "level": 82 },
+        { "label": "Environment Paintings", "level": 86 },
+        { "label": "UI Polish", "level": 84 }
+      ]
+    }
+  ]
+}

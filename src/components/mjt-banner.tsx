@@ -1,6 +1,40 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+
+import {
+  ArrowUpRight,
+  Gamepad2,
+  LayoutTemplate,
+  Package2,
+  Palette,
+} from "lucide-react";
+import bannerContent from "@/data/mjt-banner.json";
+
+type BadgeIconName = "Package2" | "LayoutTemplate" | "Palette" | "Gamepad2";
+type CtaVariant = "primary" | "secondary";
+
+type BannerContent = {
+  wordmarkTitle: string;
+  statement: string[];
+  ctas: Array<{ label: string; href: string; style: CtaVariant }>;
+  heroBadges: Array<{ label: string; icon: BadgeIconName }>;
+};
+
+const content = bannerContent as BannerContent;
+const badgeIconMap: Record<BadgeIconName, typeof Package2> = {
+  Package2,
+  LayoutTemplate,
+  Palette,
+  Gamepad2,
+};
+const ctaClassNames: Record<CtaVariant, string> = {
+  primary:
+    "inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(242,92,39,0.3)] transition hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(242,92,39,0.35)]",
+  secondary:
+    "inline-flex items-center gap-2 rounded-full border border-[color:var(--muted)]/60 bg-white/70 px-6 py-3 text-sm font-semibold text-[color:var(--ink)] shadow-[0_12px_28px_rgba(44,45,94,0.12)] transition hover:-translate-y-1 hover:bg-white",
+};
 
 const dashLength = 2200;
 
@@ -110,39 +144,63 @@ export default function MjtBanner() {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-6 sm:px-8">
-        <div className=" w-full px-4 sm:px-10 md:px-16">
+        <div className="w-full px-4 sm:px-10 md:px-16">
           <div className="container mjt-wrapper">
-          <svg
-            viewBox="0 0 500 260"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMidYMid meet"
-            className="mx-auto block h-auto w-full"
-            style={{ maxWidth: "min(92vw, 68rem)", overflow: "visible" }}
-            role="img"
-            aria-labelledby="mjt-banner-title"
-          >
-            <title id="mjt-banner-title">MJT wordmark banner</title>
-
-            <text
-              x="50%"
-              y="50%"
-              textAnchor="middle"
-              dy=".32em"
-              className="mjt-banner__title"
-              style={{ strokeDasharray: dashLength, strokeDashoffset: dashLength }}
+            <svg
+              viewBox="0 0 500 260"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="xMidYMid meet"
+              className="mx-auto block h-auto w-full"
+              style={{ maxWidth: "min(92vw, 68rem)", overflow: "visible" }}
+              role="img"
+              aria-labelledby="mjt-banner-title"
             >
-              MJT
-            </text>
-          </svg>
+              <title id="mjt-banner-title">{content.wordmarkTitle}</title>
+
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dy=".32em"
+                className="mjt-banner__title"
+                style={{ strokeDasharray: dashLength, strokeDashoffset: dashLength }}
+              >
+                MJT
+              </text>
+            </svg>
           </div>
         </div>
 
         <p className="max-w-2xl text-lg leading-relaxed text-[color:var(--ink)]/80 sm:text-xl dark:text-neutral-300/90">
-          <span className="block">
-            Sketching connections between creativity, technology, and community
-          </span>
-          <span className="block">through code, art, and motion.</span>
+          {content.statement.map((line) => (
+            <span key={line} className="block">
+              {line}
+            </span>
+          ))}
         </p>
+        <div className="flex flex-wrap gap-4">
+          {content.ctas.map((cta) => (
+            <Link key={cta.label} href={cta.href} className={ctaClassNames[cta.style] ?? ctaClassNames.primary}>
+              {cta.label}
+              {cta.style === "primary" ? <ArrowUpRight className="h-4 w-4" aria-hidden /> : null}
+            </Link>
+          ))}
+        </div>
+
+        <ul className="flex flex-wrap gap-3 text-sm font-semibold text-[color:var(--ink)]/80">
+          {content.heroBadges.map(({ label, icon }) => {
+            const Icon = badgeIconMap[icon] ?? Package2;
+            return (
+              <li
+                key={label}
+                className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-[0_12px_30px_rgba(44,45,94,0.12)]"
+              >
+                <Icon className="h-4 w-4 text-[color:var(--accent)]" aria-hidden />
+                {label}
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </section>
   );

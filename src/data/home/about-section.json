@@ -1,0 +1,31 @@
+{
+  "heading": {
+    "eyebrow": "About",
+    "title": "Curious maker with a sketchbook mindset",
+    "description": "I build in the open--pairing brand systems with illustration, and keeping the web fast, inclusive, and joyful."
+  },
+  "introParagraphs": [
+    "Whether I am working on packaging for a new cafe, preparing art college course material, or exploring 2D game assets, play leads the process. I am fascinated by how tactile artifacts and digital interfaces can feel cohesive.",
+    "Collaboration is essential. I work closely with engineers, printers, and educators to maintain a shared visual language. The Studio Notes archive documents experiments, successes, and the lessons learned along the way."
+  ],
+  "studioSnapshot": {
+    "title": "Studio snapshot",
+    "items": [
+      "Packaging and illustration for food, beverage, and education brands.",
+      "Documenting process and curricula at the Art College archive.",
+      "Mixed media experiments--risograph, watercolor, and digital painting.",
+      "Currently studying gesture mapping while exploring cozy game worlds."
+    ]
+  },
+  "softwareSection": {
+    "title": "Softwares",
+    "badges": [
+      "Illustrator",
+      "Photoshop",
+      "InDesign",
+      "Figma",
+      "Procreate",
+      "Blender"
+    ]
+  }
+}
