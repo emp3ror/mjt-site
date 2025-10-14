@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { cn } from "@/lib/cn";
 
 type DoodleVariant = "cloud" | "lotus" | "line";
@@ -8,7 +10,7 @@ type DoodleDividerProps = {
   colorClassName?: string;
 };
 
-const DOODLE_COMPONENTS: Record<DoodleVariant, JSX.Element> = {
+const DOODLE_COMPONENTS: Record<DoodleVariant, ReactElement> = {
   cloud: (
     <svg viewBox="0 0 400 80" role="img" aria-hidden fill="none" stroke="currentColor" strokeWidth="4">
       <path

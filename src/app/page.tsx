@@ -1,11 +1,5 @@
-import { DoodleDivider } from "@/components/doodle-divider";
 import MjtBanner from "@/components/mjt-banner";
-import { HeroSection } from "@/components/home/hero-section";
 import { AboutSection } from "@/components/home/about-section";
-import { ExperienceSection } from "@/components/home/experience-section";
-import { SkillsSection } from "@/components/home/skills-section";
-import { WorksSection } from "@/components/home/works-section";
-import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { LatestNotesSection } from "@/components/home/latest-notes-section";
 import { ContactSection } from "@/components/home/contact-section";
 import type { Post } from "contentlayer/generated";

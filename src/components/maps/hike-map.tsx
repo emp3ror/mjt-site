@@ -60,6 +60,8 @@ type LeafletMarker = LeafletLayer & {
 type LeafletMapInstance = {
   fitBounds: (bounds: LeafletBounds, options?: { padding?: [number, number] }) => void;
   removeLayer: (layer: LeafletLayer) => void;
+  on?: (event: string, handler: (payload: { latlng: { lat: number; lng: number } }) => void) => void;
+  off?: (event: string, handler: (payload: { latlng: { lat: number; lng: number } }) => void) => void;
 };
 
 type Leaflet = {
@@ -81,6 +83,7 @@ type ChartActiveElement = { datasetIndex: number; index: number };
 type ChartInstance = {
   destroy: () => void;
   update: () => void;
+  setDatasetVisibility?: (datasetIndex: number, visible: boolean) => void;
   setActiveElements?: (elements: ChartActiveElement[], eventPosition?: { x: number; y: number }) => void;
   tooltip?: {
     setActiveElements?: (elements: ChartActiveElement[], eventPosition?: { x: number; y: number }) => void;
@@ -97,6 +100,18 @@ type ChartModule = {
   new (ctx: CanvasRenderingContext2D, config: unknown): ChartInstance;
 };
 
+type ChartPointContext = {
+  raw: number | null;
+};
+
+type ChartTooltipItem = {
+  label: string;
+  datasetIndex: number;
+  dataIndex: number;
+  parsed: { y: number };
+  raw: number | null;
+};
+
 declare global {
   interface Window {
     L?: Leaflet;
@@ -110,6 +125,9 @@ const CHART_JS = "https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min
 
 let leafletPromise: Promise<Leaflet | undefined> | null = null;
 let chartPromise: Promise<ChartModule | undefined> | null = null;
+
+const isDefined = <T,>(value: T | null | undefined): value is T =>
+  value !== null && value !== undefined;
 
 const ensureLeaflet = async () => {
   if (typeof window === "undefined") {
@@ -237,41 +255,61 @@ const parseGpx = (xml: Document): GpxTrack => {
     .map((node) => {
       const lat = Number(node.getAttribute("lat"));
       const lon = Number(node.getAttribute("lon"));
-      if (Number.isNaN(lat) || Number.isNaN(lon)) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
         return null;
       }
+
       const eleText = node.getElementsByTagName("ele")[0]?.textContent ?? undefined;
       const timeText = node.getElementsByTagName("time")[0]?.textContent ?? undefined;
-      return {
+
+      const elevationValue = eleText !== undefined ? Number(eleText) : Number.NaN;
+      const point: GpxPoint = {
         lat,
         lon,
-        ele: eleText !== undefined ? Number(eleText) : null,
-        time: timeText ? new Date(timeText) : undefined,
-      } satisfies GpxPoint;
+        ele: Number.isFinite(elevationValue) ? elevationValue : null,
+      };
+
+      if (timeText) {
+        const parsedTime = new Date(timeText);
+        if (!Number.isNaN(parsedTime.getTime())) {
+          point.time = parsedTime;
+        }
+      }
+
+      return point;
     })
-    .filter((point): point is GpxPoint => Boolean(point));
+    .filter(isDefined);
 
   const wpts = Array.from(xml.getElementsByTagName("wpt"));
   const waypoints: GpxWaypoint[] = wpts
     .map((node) => {
       const lat = Number(node.getAttribute("lat"));
       const lon = Number(node.getAttribute("lon"));
-      if (Number.isNaN(lat) || Number.isNaN(lon)) {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
         return null;
       }
       const name = node.getElementsByTagName("name")[0]?.textContent ?? undefined;
       const desc = node.getElementsByTagName("desc")[0]?.textContent ?? undefined;
       const symbol = node.getElementsByTagName("sym")[0]?.textContent ?? undefined;
       const icon = resolveWaypointIcon(symbol ?? name ?? desc);
-      return {
+      const waypoint: GpxWaypoint = {
         lat,
         lon,
-        name,
-        desc,
-        icon,
-      } satisfies GpxWaypoint;
+      };
+
+      if (name) {
+        waypoint.name = name;
+      }
+      if (desc) {
+        waypoint.desc = desc;
+      }
+      if (icon) {
+        waypoint.icon = icon;
+      }
+
+      return waypoint;
     })
-    .filter((waypoint): waypoint is GpxWaypoint => Boolean(waypoint));
+    .filter(isDefined);
 
   return { points, waypoints };
 };
@@ -406,15 +444,20 @@ export function HikeMap({ gpxPath, className, checkpoints }: HikeMapProps) {
           return null;
         }
 
-        return {
-          lat,
-          lon,
-          name: entry?.name ?? undefined,
-          desc: entry?.desc ?? undefined,
-          icon: entry?.icon ?? undefined,
-        } satisfies GpxWaypoint;
+        const waypoint: GpxWaypoint = { lat, lon };
+        if (entry?.name) {
+          waypoint.name = entry.name;
+        }
+        if (entry?.desc) {
+          waypoint.desc = entry.desc;
+        }
+        if (entry?.icon) {
+          waypoint.icon = entry.icon;
+        }
+
+        return waypoint;
       })
-      .filter((value): value is GpxWaypoint => Boolean(value));
+      .filter(isDefined);
   }, [checkpoints]);
 
 
@@ -479,10 +522,11 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
 
   useEffect(() => {
     const chart = chartRef.current;
-    if (chart) {
+    if (chart?.setDatasetVisibility) {
       chart.setDatasetVisibility(1, showCheckpoints);
-      chart.update();
     }
+
+    chart?.update();
 
     if (!showCheckpoints) {
       updateActiveCheckpoint(null);
@@ -636,41 +680,46 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
       handleCoordinateSelection(lat, lng);
     };
 
-    map.on("click", handleMapClick);
+    map.on?.("click", handleMapClick);
 
     overlays.push({
       remove: () => {
-        map.off("click", handleMapClick);
+        map.off?.("click", handleMapClick);
       },
     });
 
-    const fallbackWaypoints: GpxWaypoint[] = track.points.length
-      ? [
-          {
-            lat: track.points[0].lat,
-            lon: track.points[0].lon,
-            name: "Trailhead",
-            desc: "Starting point",
-            icon: "🥾",
-          },
-          track.points[Math.floor(track.points.length / 2)]
-            ? {
-                lat: track.points[Math.floor(track.points.length / 2)].lat,
-                lon: track.points[Math.floor(track.points.length / 2)].lon,
-                name: "Midpoint",
-                desc: "Halfway through the trail",
-                icon: "🥪",
-              }
-            : null,
-          {
-            lat: track.points[track.points.length - 1].lat,
-            lon: track.points[track.points.length - 1].lon,
-            name: "Summit",
-            desc: "Finish line",
-            icon: "🎉",
-          },
-        ].filter(Boolean) as GpxWaypoint[]
-      : [];
+    const fallbackWaypoints: GpxWaypoint[] = [];
+
+    if (track.points.length) {
+      const startPoint = track.points[0];
+      fallbackWaypoints.push({
+        lat: startPoint.lat,
+        lon: startPoint.lon,
+        name: "Trailhead",
+        desc: "Starting point",
+        icon: "🥾",
+      });
+
+      const midpoint = track.points[Math.floor(track.points.length / 2)];
+      if (midpoint) {
+        fallbackWaypoints.push({
+          lat: midpoint.lat,
+          lon: midpoint.lon,
+          name: "Midpoint",
+          desc: "Halfway through the trail",
+          icon: "🥪",
+        });
+      }
+
+      const endPoint = track.points[track.points.length - 1];
+      fallbackWaypoints.push({
+        lat: endPoint.lat,
+        lon: endPoint.lon,
+        name: "Summit",
+        desc: "Finish line",
+        icon: "🎉",
+      });
+    }
 
     const waypointsToRender =
       providedCheckpoints && providedCheckpoints.length > 0
@@ -802,7 +851,7 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
               data: checkpointHeights,
               showLine: false,
               hidden: !showCheckpoints,
-              pointRadius(context) {
+              pointRadius(context: ChartPointContext) {
                 const value = context.raw as number | null;
                 return value === null ? 0 : 6;
               },
@@ -824,10 +873,10 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                title(contexts) {
+                title(contexts: ChartTooltipItem[]) {
                   return contexts.length ? `Distance ${contexts[0].label} km` : "";
                 },
-                label(context) {
+                label(context: ChartTooltipItem) {
                   if (context.datasetIndex === 1) {
                     const index = context.dataIndex;
                     const waypointIndex = checkpointIndicesRef.current.indexOf(index);

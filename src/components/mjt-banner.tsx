@@ -69,9 +69,6 @@ const ICON_SIZE_VARIATION = 6;
 const ICON_ROTATION_STEP = 2;
 const ICON_BASE_OPACITY = 0.6;
 const ICON_OPACITY_VARIATION = 0.3;
-const ICON_COLOR = "#C4C9DD";
-
-
 type IconInstance = {
   src: (typeof iconSources)[number];
   top: string;
