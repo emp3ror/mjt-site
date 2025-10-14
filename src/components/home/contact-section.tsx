@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import Script from "next/script";
 
 import { SectionHeading } from "@/components/section-heading";
 import contactSectionContent from "@/data/home/contact-section.json";
-import { Sparkles, Instagram, Linkedin, Mail, Palette } from "lucide-react";
+import { Sparkles, Instagram, Linkedin, Mail, Palette, Loader2 } from "lucide-react";
+import { FormEvent, useState } from "react";
 
 type IconName = "Mail" | "Palette" | "Instagram" | "Linkedin" | "Sparkles";
 
@@ -43,9 +46,101 @@ const iconMap: Record<IconName, typeof Mail> = {
 
 const content = contactSectionContent as ContactSectionContent;
 
+declare global {
+  interface Window {
+    grecaptcha?: {
+      getResponse(widgetId?: number): string;
+      reset(widgetId?: number): void;
+    };
+  }
+}
+
 export function ContactSection() {
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY;
   const SubmitIcon = iconMap[content.form.submit.icon] ?? Sparkles;
+  const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const isLoading = submitState === "loading";
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (submitState === "loading") {
+      return;
+    }
+
+    setSubmitState("loading");
+    setFeedback(null);
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    if (recaptchaSiteKey) {
+      if (typeof window === "undefined") {
+        setSubmitState("error");
+        setFeedback("reCAPTCHA is unavailable in this environment.");
+        return;
+      }
+
+      const widgetResponse = window.grecaptcha?.getResponse() ?? "";
+
+      if (!widgetResponse) {
+        setSubmitState("error");
+        setFeedback("Please confirm you are not a robot.");
+        return;
+      }
+
+      formData.set("g-recaptcha-response", widgetResponse);
+    }
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            error?: unknown;
+            issues?: Record<string, unknown>;
+            details?: unknown;
+          }
+        | null;
+
+      if (!response.ok) {
+        const issueMessage =
+          payload?.issues && typeof payload.issues === "object"
+            ? Object.values(payload.issues)
+                .flatMap((entry) => (Array.isArray(entry) ? entry : [entry]))
+                .find((entry) => typeof entry === "string")
+            : undefined;
+
+        const errorMessage =
+          typeof issueMessage === "string"
+            ? issueMessage
+            : typeof payload?.error === "string"
+              ? payload.error
+              : typeof payload?.details === "string"
+                ? payload.details
+                : "Unable to send your message right now.";
+
+        setSubmitState("error");
+        setFeedback(errorMessage);
+        return;
+      }
+
+      setSubmitState("success");
+      setFeedback("Thanks! Your message is on its way.");
+      form.reset();
+
+      if (recaptchaSiteKey) {
+        window.grecaptcha?.reset();
+      }
+    } catch {
+      setSubmitState("error");
+      setFeedback("Something went wrong. Please try again.");
+    }
+  };
 
   return (
     <section id="contact" className="w-full bg-white/80 py-16 sm:py-24">
@@ -77,6 +172,7 @@ export function ContactSection() {
         <form
           action="/api/contact"
           method="post"
+          onSubmit={handleSubmit}
           className="grid gap-4 rounded-3xl border border-[color:var(--muted)]/40 bg-white/95 p-6 shadow-inner"
         >
           <div className="grid gap-2">
@@ -117,11 +213,34 @@ export function ContactSection() {
           </div>
           <button
             type="submit"
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[color:var(--accent)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(242,92,39,0.35)] transition hover:-translate-y-1"
+            disabled={isLoading}
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[color:var(--accent)] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(242,92,39,0.35)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {content.form.submit.label}
-            <SubmitIcon className="h-4 w-4" aria-hidden />
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                Sending...
+              </>
+            ) : (
+              <>
+                {content.form.submit.label}
+                <SubmitIcon className="h-4 w-4" aria-hidden />
+              </>
+            )}
           </button>
+          {feedback ? (
+            <p
+              className={
+                submitState === "success"
+                  ? "text-xs font-semibold text-[color:var(--leaf)]"
+                  : "text-xs font-semibold text-[color:var(--accent)]"
+              }
+              role="status"
+              aria-live="polite"
+            >
+              {feedback}
+            </p>
+          ) : null}
           {recaptchaSiteKey ? (
             <div className="pt-2">
               <div className="g-recaptcha" data-sitekey={recaptchaSiteKey} />

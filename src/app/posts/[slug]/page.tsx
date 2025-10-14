@@ -11,6 +11,7 @@ import rehypeSlug from "rehype-slug";
 
 import { allPosts } from "contentlayer/generated";
 import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
+import { ShareToolbar } from "@/components/share/share-toolbar";
 
 const posts = [...allPosts].sort((a, b) =>
   new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -113,6 +114,14 @@ export default async function PostPage({ params }: PostPageProps) {
           <span>{post.readingTime}</span>
         </div>
       </header>
+
+      <ShareToolbar
+        itemId={post._id}
+        title={post.title}
+        description={post.description}
+        url={post.url}
+        className="mt-6"
+      />
 
       <section className="mt-12 space-y-6">
         {showHikeMap && post.gpx ? (

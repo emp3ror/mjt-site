@@ -9,7 +9,6 @@ const contactFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(200, "Name is too long."),
   email: z.string().trim().min(1, "Email is required.").email("Provide a valid email address."),
   message: z.string().trim().min(1, "Message is required.").max(5000, "Message is too long."),
-  recaptchaToken: z.string().min(1, "reCAPTCHA token is required."),
 });
 
 const recaptchaEnvSchema = z.object({
@@ -23,11 +22,12 @@ function getStringValue(value: FormDataEntryValue | null) {
 export async function POST(request: Request) {
   const payload = await request.formData();
 
+  const recaptchaToken = getStringValue(payload.get("g-recaptcha-response")) ?? "";
+
   const parsedPayload = contactFormSchema.safeParse({
     name: getStringValue(payload.get("name")) ?? "",
     email: getStringValue(payload.get("email")) ?? "",
     message: getStringValue(payload.get("message")) ?? "",
-    recaptchaToken: getStringValue(payload.get("g-recaptcha-response")) ?? "",
   });
 
   if (!parsedPayload.success) {
@@ -40,48 +40,59 @@ export async function POST(request: Request) {
     );
   }
 
-  const { name, email, message, recaptchaToken } = parsedPayload.data;
+  const { name, email, message } = parsedPayload.data;
 
   const parsedEnv = recaptchaEnvSchema.safeParse({
     GOOGLE_RECAPTCHA_SECRET_KEY: process.env.GOOGLE_RECAPTCHA_SECRET_KEY ?? "",
   });
 
-  if (!parsedEnv.success) {
+  const recaptchaSecret = parsedEnv.success ? parsedEnv.data.GOOGLE_RECAPTCHA_SECRET_KEY : "";
+  const recaptchaConfigured = recaptchaSecret.length > 0;
+
+  if (recaptchaConfigured) {
+    if (!recaptchaToken) {
+      return NextResponse.json(
+        {
+          error: "Invalid form submission.",
+          issues: { recaptchaToken: ["reCAPTCHA token is required."] },
+        },
+        { status: 400 },
+      );
+    }
+
+    const verificationResponse = await fetch(RECAPTCHA_VERIFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret: recaptchaSecret, response: recaptchaToken }),
+    });
+
+    if (!verificationResponse.ok) {
+      return NextResponse.json({ error: "Failed to verify reCAPTCHA." }, { status: 502 });
+    }
+
+    const verification = (await verificationResponse.json()) as {
+      success?: boolean;
+      score?: number;
+      action?: string;
+      "error-codes"?: string[];
+    };
+
+    if (!verification.success) {
+      return NextResponse.json(
+        {
+          error: "reCAPTCHA verification failed.",
+          details: verification["error-codes"] ?? null,
+        },
+        { status: 400 },
+      );
+    }
+  } else if (recaptchaToken) {
     return NextResponse.json(
       {
         error: "reCAPTCHA server secret is not configured.",
-        issues: parsedEnv.error.flatten().fieldErrors,
+        issues: parsedEnv.success ? null : parsedEnv.error.flatten().fieldErrors,
       },
       { status: 500 },
-    );
-  }
-
-  const { GOOGLE_RECAPTCHA_SECRET_KEY: recaptchaSecret } = parsedEnv.data;
-
-  const verificationResponse = await fetch(RECAPTCHA_VERIFY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ secret: recaptchaSecret, response: recaptchaToken }),
-  });
-
-  if (!verificationResponse.ok) {
-    return NextResponse.json({ error: "Failed to verify reCAPTCHA." }, { status: 502 });
-  }
-
-  const verification = (await verificationResponse.json()) as {
-    success?: boolean;
-    score?: number;
-    action?: string;
-    "error-codes"?: string[];
-  };
-
-  if (!verification.success) {
-    return NextResponse.json(
-      {
-        error: "reCAPTCHA verification failed.",
-        details: verification["error-codes"] ?? null,
-      },
-      { status: 400 },
     );
   }
 
