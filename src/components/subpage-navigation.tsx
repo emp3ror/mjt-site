@@ -13,6 +13,7 @@ const segmentLabelMap: Record<string, string> = {
   posts: "Notes",
   tags: "Tags",
   "art-college": "Art College",
+  events: "Events",
 };
 
 const formatSegmentLabel = (value: string) =>
