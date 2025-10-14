@@ -11,7 +11,7 @@ import rehypeSlug from "rehype-slug";
 
 import { allPosts } from "contentlayer/generated";
 import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
-import { ShareToolbar } from "@/components/share/share-toolbar";
+import { ContentActions } from "@/components/actions/content-actions";
 
 const posts = [...allPosts].sort((a, b) =>
   new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -115,12 +115,23 @@ export default async function PostPage({ params }: PostPageProps) {
         </div>
       </header>
 
-      <ShareToolbar
+      <ContentActions
         itemId={post._id}
         title={post.title}
         description={post.description}
         url={post.url}
+        likeStorageKey="mjt-liked-items"
         className="mt-6"
+        header={
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">
+              Share this article
+            </p>
+            <p className="mt-1 text-sm text-[color:var(--ink)]/70">
+              Spread the word or leave a quick like to keep this thread in your personal rotation.
+            </p>
+          </div>
+        }
       />
 
       <section className="mt-12 space-y-6">

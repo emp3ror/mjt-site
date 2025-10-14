@@ -144,7 +144,7 @@ export function ContactSection() {
 
   return (
     <section id="contact" className="w-full bg-white/80 py-16 sm:py-24">
-      <div className="mx-auto grid max-w-6xl gap-8 rounded-[3rem] bg-white/90 p-10 shadow-[0_26px_80px_rgba(44,45,94,0.16)] backdrop-blur lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="mx-auto grid max-w-6xl gap-8 rounded-[3rem] bg-white/90 px-6 py-8 shadow-[0_26px_80px_rgba(44,45,94,0.16)] backdrop-blur sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
           <SectionHeading
             eyebrow={content.heading.eyebrow}
@@ -173,7 +173,7 @@ export function ContactSection() {
           action="/api/contact"
           method="post"
           onSubmit={handleSubmit}
-          className="grid gap-4 rounded-3xl border border-[color:var(--muted)]/40 bg-white/95 p-6 shadow-inner"
+          className="grid gap-4 rounded-3xl bg-white/95 p-0"
         >
           <div className="grid gap-2">
             <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--ink)]/60" htmlFor="name">
@@ -184,7 +184,7 @@ export function ContactSection() {
               name="name"
               type="text"
               required
-              className="h-12 rounded-2xl border border-[color:var(--muted)]/40 bg-white px-4 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--accent)]"
+              className="h-12 rounded-2xl border border-[color:var(--muted)]/40 bg-white px-3 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none sm:px-4"
             />
           </div>
           <div className="grid gap-2">
@@ -196,7 +196,7 @@ export function ContactSection() {
               name="email"
               type="email"
               required
-              className="h-12 rounded-2xl border border-[color:var(--muted)]/40 bg-white px-4 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--leaf)]"
+              className="h-12 rounded-2xl border border-[color:var(--muted)]/40 bg-white px-3 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--leaf)] focus:outline-none sm:px-4"
             />
           </div>
           <div className="grid gap-2">
@@ -208,7 +208,7 @@ export function ContactSection() {
               name="message"
               rows={4}
               required
-              className="rounded-2xl border border-[color:var(--muted)]/40 bg-white px-4 py-3 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--accent)]"
+              className="rounded-2xl border border-[color:var(--muted)]/40 bg-white px-3 py-3 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none sm:px-4"
             />
           </div>
           <button
