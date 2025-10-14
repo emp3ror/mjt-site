@@ -106,3 +106,46 @@ export const buildGoogleCalendarLink = ({
 
   return `https://www.google.com/calendar/render?${params.toString()}`;
 };
+
+export const buildMicrosoftCalendarLink = ({
+  title,
+  description,
+  location,
+  url,
+  ...dateFields
+}: CalendarInput) => {
+  const { start, endCalendar, isAllDay } = normalizeEventDates(dateFields);
+
+  const params = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: title,
+  });
+
+  if (isAllDay) {
+    // Outlook uses YYYY-MM-DD for all-day values.
+    params.set("allday", "true");
+    params.set("startdt", start.toISOString().split("T")[0]);
+    params.set("enddt", endCalendar.toISOString().split("T")[0]);
+  } else {
+    params.set("startdt", start.toISOString());
+    params.set("enddt", endCalendar.toISOString());
+  }
+
+  if (description || url) {
+    const bodyParts = [];
+    if (description) {
+      bodyParts.push(description);
+    }
+    if (url) {
+      bodyParts.push(url);
+    }
+    params.set("body", bodyParts.join("\n\n"));
+  }
+
+  if (location) {
+    params.set("location", location);
+  }
+
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+};
