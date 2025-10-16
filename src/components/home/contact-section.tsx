@@ -6,7 +6,9 @@ import Script from "next/script";
 import { SectionHeading } from "@/components/section-heading";
 import contactSectionContent from "@/data/home/contact-section.json";
 import contactSocialLinks from "@/data/home/contact-social-links.json";
-import { Sparkles, Instagram, Linkedin, Mail, Palette, Tiktok, Loader2 } from "lucide-react";
+import { TikTokIcon } from "@/components/icons/tiktok";
+import type { LucideIcon } from "lucide-react";
+import { Sparkles, Instagram, Linkedin, Mail, Palette, Loader2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 
 type SocialIconName = "Mail" | "Palette" | "Instagram" | "Linkedin" | "Tiktok";
@@ -43,13 +45,13 @@ type ContactSocialLinks = {
   }>;
 };
 
-const iconMap: Record<IconName, typeof Mail> = {
+const iconMap: Record<IconName, LucideIcon> = {
   Mail,
   Palette,
   Instagram,
   Linkedin,
   Sparkles,
-  Tiktok,
+  Tiktok: TikTokIcon,
 };
 
 const content = contactSectionContent as ContactSectionContent;
