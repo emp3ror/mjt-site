@@ -5,10 +5,12 @@ import Script from "next/script";
 
 import { SectionHeading } from "@/components/section-heading";
 import contactSectionContent from "@/data/home/contact-section.json";
-import { Sparkles, Instagram, Linkedin, Mail, Palette, Loader2 } from "lucide-react";
+import contactSocialLinks from "@/data/home/contact-social-links.json";
+import { Sparkles, Instagram, Linkedin, Mail, Palette, Tiktok, Loader2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 
-type IconName = "Mail" | "Palette" | "Instagram" | "Linkedin" | "Sparkles";
+type SocialIconName = "Mail" | "Palette" | "Instagram" | "Linkedin" | "Tiktok";
+type IconName = SocialIconName | "Sparkles";
 
 type ContactSectionContent = {
   heading: {
@@ -16,11 +18,6 @@ type ContactSectionContent = {
     title: string;
     description: string;
   };
-  contactSocials: Array<{
-    label: string;
-    href: string;
-    icon: IconName;
-  }>;
   form: {
     fields: {
       name: { label: string };
@@ -36,15 +33,27 @@ type ContactSectionContent = {
   };
 };
 
+type ContactSocialLinks = {
+  links: Array<{
+    id: string;
+    label: string;
+    href: string;
+    icon: SocialIconName;
+    ariaLabel?: string;
+  }>;
+};
+
 const iconMap: Record<IconName, typeof Mail> = {
   Mail,
   Palette,
   Instagram,
   Linkedin,
   Sparkles,
+  Tiktok,
 };
 
 const content = contactSectionContent as ContactSectionContent;
+const socialLinksContent = contactSocialLinks as ContactSocialLinks;
 
 declare global {
   interface Window {
@@ -152,17 +161,18 @@ export function ContactSection() {
             description={content.heading.description}
           />
 
-          <div className="grid gap-3">
-            {content.contactSocials.map(({ label, href, icon }) => {
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:grid sm:gap-3 sm:overflow-visible sm:pb-0">
+            {socialLinksContent.links.map(({ id, label, href, icon, ariaLabel }) => {
               const Icon = iconMap[icon] ?? Mail;
               return (
                 <Link
-                  key={label}
+                  key={id}
                   href={href}
-                  className="group inline-flex items-center gap-3 rounded-2xl border border-[color:var(--muted)]/50 bg-white/80 px-5 py-3 text-sm font-semibold text-[color:var(--ink)] transition hover:-translate-y-1 hover:bg-white"
+                  aria-label={ariaLabel ?? label}
+                  className="group inline-flex h-12 w-12 flex-none items-center justify-center rounded-2xl border border-[color:var(--muted)]/50 bg-white/80 text-sm font-semibold text-[color:var(--ink)] transition hover:-translate-y-1 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)] sm:w-full sm:justify-start sm:gap-3 sm:px-5"
                 >
-                  <Icon className="h-4 w-4 text-[color:var(--accent)] group-hover:scale-110" aria-hidden />
-                  {label}
+                  <Icon className="h-5 w-5 text-[color:var(--accent)] transition group-hover:scale-110 sm:h-4 sm:w-4" aria-hidden />
+                  <span className="hidden sm:inline">{label}</span>
                 </Link>
               );
             })}
@@ -211,6 +221,15 @@ export function ContactSection() {
               className="rounded-2xl border border-[color:var(--muted)]/40 bg-white px-3 py-3 text-sm text-[color:var(--ink)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none sm:px-4"
             />
           </div>
+          {recaptchaSiteKey ? (
+            <div className="pt-2">
+              <div className="g-recaptcha" data-sitekey={recaptchaSiteKey} />
+            </div>
+          ) : (
+            <p className="text-xs text-[color:var(--ink)]/60">
+              {content.form.recaptchaNotConfigured}
+            </p>
+          )}
           <button
             type="submit"
             disabled={isLoading}
@@ -241,15 +260,7 @@ export function ContactSection() {
               {feedback}
             </p>
           ) : null}
-          {recaptchaSiteKey ? (
-            <div className="pt-2">
-              <div className="g-recaptcha" data-sitekey={recaptchaSiteKey} />
-            </div>
-          ) : (
-            <p className="text-xs text-[color:var(--ink)]/60">
-              {content.form.recaptchaNotConfigured}
-            </p>
-          )}
+          
           <p className="text-xs text-[color:var(--ink)]/50">
             {content.form.responseTimeNotice}
           </p>

@@ -4,12 +4,6 @@
     "title": "Let us build something friendly",
     "description": "Tell me about your next launch, illustration brief, or art residency."
   },
-  "contactSocials": [
-    { "label": "Email", "href": "mailto:hello@mjt.studio", "icon": "Mail" },
-    { "label": "Behance", "href": "https://www.behance.net", "icon": "Palette" },
-    { "label": "Instagram", "href": "https://www.instagram.com", "icon": "Instagram" },
-    { "label": "LinkedIn", "href": "https://www.linkedin.com", "icon": "Linkedin" }
-  ],
   "form": {
     "fields": {
       "name": { "label": "Name" },
