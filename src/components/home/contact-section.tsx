@@ -6,12 +6,11 @@ import Script from "next/script";
 import { SectionHeading } from "@/components/section-heading";
 import contactSectionContent from "@/data/home/contact-section.json";
 import contactSocialLinks from "@/data/home/contact-social-links.json";
-import { TikTokIcon } from "@/components/icons/tiktok";
 import type { LucideIcon } from "lucide-react";
 import { Sparkles, Instagram, Linkedin, Mail, Palette, Loader2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 
-type SocialIconName = "Mail" | "Palette" | "Instagram" | "Linkedin" | "Tiktok";
+type SocialIconName = "Mail" | "Palette" | "Instagram" | "Linkedin" ;
 type IconName = SocialIconName | "Sparkles";
 
 type ContactSectionContent = {
@@ -51,7 +50,6 @@ const iconMap: Record<IconName, LucideIcon> = {
   Instagram,
   Linkedin,
   Sparkles,
-  Tiktok: TikTokIcon,
 };
 
 const content = contactSectionContent as ContactSectionContent;
