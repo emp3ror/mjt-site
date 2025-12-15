@@ -11,9 +11,9 @@ import type { ShopItem } from "contentlayer/generated";
 import { allShopItems } from "contentlayer/generated";
 
 type ShopPostPageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 const renderContent = cache(async (source: string) => {
@@ -43,7 +43,8 @@ export const generateStaticParams = () =>
   }));
 
 export default async function ShopPostPage({ params }: ShopPostPageProps) {
-  const item: ShopItem | undefined = allShopItems.find((entry) => entry.slug === params.slug);
+  const { slug } = await params;
+  const item: ShopItem | undefined = allShopItems.find((entry) => entry.slug === slug);
 
   if (!item) {
     notFound();
