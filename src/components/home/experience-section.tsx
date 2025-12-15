@@ -15,13 +15,15 @@ const content = experienceSectionContent as ExperienceSectionContent;
 
 export function ExperienceSection() {
   return (
-    <section id="experience" className="space-y-10">
-      <SectionHeading
-        eyebrow={content.heading.eyebrow}
-        title={content.heading.title}
-        description={content.heading.description}
-      />
-      <Timeline items={content.timeline} />
+    <section id="experience" className="w-full bg-white">
+      <div className="container mx-auto max-w-7xl space-y-10 px-4 py-16 sm:py-20 md:px-8">
+        <SectionHeading
+          eyebrow={content.heading.eyebrow}
+          title={content.heading.title}
+          description={content.heading.description}
+        />
+        <Timeline items={content.timeline} />
+      </div>
     </section>
   );
 }

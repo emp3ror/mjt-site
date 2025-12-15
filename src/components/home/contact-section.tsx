@@ -152,8 +152,8 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="w-full bg-white/80 py-16 sm:py-24">
-      <div className="mx-auto grid max-w-6xl gap-8 rounded-[3rem] bg-white/90 px-6 py-8 shadow-[0_26px_80px_rgba(44,45,94,0.16)] backdrop-blur sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
+    <section id="contact" className="w-full bg-white/80">
+      <div className="container mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:py-24 md:px-8 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
           <SectionHeading
             eyebrow={content.heading.eyebrow}

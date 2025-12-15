@@ -28,8 +28,8 @@ const snapshotItemClasses = [
 
 export function AboutSection() {
   return (
-    <section id="about" className="w-full bg-white/75 py-16 sm:py-20">
-      <div className="mx-auto grid max-w-6xl gap-10 rounded-[3rem] bg-white/80 p-10 shadow-[0_24px_70px_rgba(44,45,94,0.12)] backdrop-blur sm:px-12">
+    <section id="about" className="w-full bg-white/75">
+      <div className="container mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:py-20 md:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <SectionHeading
             eyebrow={content.heading.eyebrow}

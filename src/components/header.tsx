@@ -6,11 +6,13 @@ import Link from "next/link";
 
 
 const navigation = [
-  { label: "Work", href: "#works" },
+  { label: "About Me", href: "#about" },
+  { label: "Projects", href: "#works" },
   { label: "Experience", href: "#experience" },
-  { label: "Skills", href: "#skills" },
-  { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#contact" },
+  { label: "Today I Learned", href: "#today-i-learned" },
+  { label: "Journel", href: "/posts" },
+  { label: "Community Contribution", href: "#community-contribution" },
+  { label: "Work with Me", href: "#contact" },
 ];
 
 export function Header() {

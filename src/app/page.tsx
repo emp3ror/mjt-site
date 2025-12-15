@@ -1,6 +1,7 @@
 import MjtBanner from "@/components/mjt-banner";
 import { AboutSection } from "@/components/home/about-section";
 import { LatestNotesSection } from "@/components/home/latest-notes-section";
+import { SocialHighlightsSection } from "@/components/home/social-highlights-section";
 import { ContactSection } from "@/components/home/contact-section";
 import type { Post } from "contentlayer/generated";
 import { allPosts } from "contentlayer/generated";
@@ -32,6 +33,8 @@ export default function Home() {
       {/* <TestimonialsSection /> */}
 
       <LatestNotesSection posts={latestPosts} />
+
+      <SocialHighlightsSection />
 
       <ContactSection />
     </main>

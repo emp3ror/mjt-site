@@ -1,0 +1,36 @@
+{
+  "layout": {
+    "fanAngle": 5,
+    "scaleStep": 0.085,
+    "hoverScaleBoost": 0.06,
+    "hoverLift": 22,
+    "arcLift": 14,
+    "minScale": 0.72,
+    "spacing": {
+      "wide": 76,
+      "medium": 56,
+      "narrow": 40
+    },
+    "breakpoints": {
+      "medium": 1100,
+      "narrow": 780
+    },
+    "card": {
+      "width": {
+        "minRem": 11,
+        "fluidVw": 23,
+        "maxRem": 18
+      },
+      "height": {
+        "minRem": 16.5,
+        "fluidVw": 36,
+        "maxRem": 31.5
+      },
+      "borderRadiusRem": 3.31625
+    }
+  },
+  "background": {
+    "upperGlowOpacity": 0,
+    "lowerGlowOpacity": 0
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "social-highlights",
+  "headline": {
+    "titleTop": "What's up",
+    "titleBottom": "On socials",
+    "eyebrow": "Fresh from the feed"
+  },
+  "cards": [
+    {
+      "id": "highlight-celebration",
+      "image": "https://images.unsplash.com/photo-1531513897727-60af889f2025?auto=format&fit=crop&w=900&q=80",
+      "alt": "Podium celebration under confetti lights"
+    },
+    {
+      "id": "highlight-fans",
+      "image": "https://images.unsplash.com/photo-1520095972714-909e91f75b45?auto=format&fit=crop&w=900&q=80",
+      "alt": "Fans cheering trackside with cameras"
+    },
+    {
+      "id": "highlight-helmet",
+      "image": "https://images.unsplash.com/photo-1519640297868-4be1e7abfee1?auto=format&fit=crop&w=900&q=80",
+      "alt": "Driver holding a racing helmet with glowing track lights"
+    },
+    {
+      "id": "highlight-garage",
+      "image": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=900&q=80",
+      "alt": "Driver focused inside a race car cockpit"
+    },
+    {
+      "id": "highlight-pregrid",
+      "image": "https://images.unsplash.com/photo-1529429617124-aee1f66930eb?auto=format&fit=crop&w=900&q=80",
+      "alt": "Driver walking the grid during sunset"
+    },
+    {
+      "id": "highlight-paddock",
+      "image": "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=900&q=80",
+      "alt": "Team member chatting in the paddock"
+    },
+    {
+      "id": "highlight-victory",
+      "image": "https://images.unsplash.com/photo-1503752943565-27f3e76b1b2c?auto=format&fit=crop&w=900&q=80",
+      "alt": "Driver celebrating victory with a wave"
+    }
+  ],
+  "cta": {
+    "headline": "Follow Lando on social media",
+    "platforms": [
+      { "id": "tiktok", "label": "Tiktok", "href": "https://www.tiktok.com" },
+      { "id": "instagram", "label": "Instagram", "href": "https://www.instagram.com" },
+      { "id": "youtube", "label": "Youtube", "href": "https://www.youtube.com" },
+      { "id": "twitch", "label": "Twitch", "href": "https://www.twitch.tv" }
+    ]
+  }
+}

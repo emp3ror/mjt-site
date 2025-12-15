@@ -33,6 +33,51 @@ const eventComputedFields = {
   },
 };
 
+const getArtCollegeSlug = (doc: { _raw: { flattenedPath: string } }) => {
+  const flattenedPath = doc._raw.flattenedPath.replace(/^art-college\/?/, "");
+  const withoutIndex = flattenedPath.replace(/\/index$/, "");
+  return withoutIndex === "index" ? "" : withoutIndex;
+};
+
+const artCollegeComputedFields = {
+  slug: {
+    type: "string" as const,
+    resolve: (doc: { _raw: { flattenedPath: string } }) =>
+      getArtCollegeSlug(doc),
+  },
+  url: {
+    type: "string" as const,
+    resolve: (doc: { _raw: { flattenedPath: string } }) => {
+      const slug = getArtCollegeSlug(doc);
+      return slug ? `/art-college/${slug}` : "/art-college";
+    },
+  },
+};
+
+const shopOverviewComputedFields = {
+  slug: {
+    type: "string" as const,
+    resolve: () => "",
+  },
+  url: {
+    type: "string" as const,
+    resolve: () => "/shop",
+  },
+};
+
+const shopItemComputedFields = {
+  slug: {
+    type: "string" as const,
+    resolve: (doc: { _raw: { flattenedPath: string } }) =>
+      doc._raw.flattenedPath.replace(/^shop\//, ""),
+  },
+  url: {
+    type: "string" as const,
+    resolve: (doc: { _raw: { flattenedPath: string } }) =>
+      `/shop/posts/${doc._raw.flattenedPath.replace(/^shop\//, "")}`,
+  },
+};
+
 export const Post = defineDocumentType(() => ({
   name: "Post",
   filePathPattern: "posts/**/!(*index).mdx",
@@ -100,9 +145,84 @@ export const EventsOverview = defineDocumentType(() => ({
   },
 }));
 
+export const ArtCollegeOverview = defineDocumentType(() => ({
+  name: "ArtCollegeOverview",
+  filePathPattern: "art-college/index.mdx",
+  contentType: "mdx",
+  fields: {
+    title: { type: "string", required: true },
+    intro: { type: "string", required: false },
+    description: { type: "string", required: false },
+    updated: { type: "date", required: false },
+  },
+  computedFields: artCollegeComputedFields,
+}));
+
+export const ArtCollegeSection = defineDocumentType(() => ({
+  name: "ArtCollegeSection",
+  filePathPattern: "art-college/*/**/index.mdx",
+  contentType: "mdx",
+  fields: {
+    title: { type: "string", required: true },
+    intro: { type: "string", required: false },
+    description: { type: "string", required: false },
+    order: { type: "number", required: false },
+  },
+  computedFields: artCollegeComputedFields,
+}));
+
+export const ArtCollegeLesson = defineDocumentType(() => ({
+  name: "ArtCollegeLesson",
+  filePathPattern: "art-college/**/!(*index).mdx",
+  contentType: "mdx",
+  fields: {
+    title: { type: "string", required: true },
+    description: { type: "string", required: false },
+    date: { type: "date", required: false },
+    updated: { type: "date", required: false },
+  },
+  computedFields: artCollegeComputedFields,
+}));
+
+export const ShopOverview = defineDocumentType(() => ({
+  name: "ShopOverview",
+  filePathPattern: "shop/index.mdx",
+  contentType: "mdx",
+  fields: {
+    title: { type: "string", required: true },
+    intro: { type: "string", required: false },
+    description: { type: "string", required: false },
+    updated: { type: "date", required: false },
+  },
+  computedFields: shopOverviewComputedFields,
+}));
+
+export const ShopItem = defineDocumentType(() => ({
+  name: "ShopItem",
+  filePathPattern: "shop/**/!(*index).mdx",
+  contentType: "mdx",
+  fields: {
+    title: { type: "string", required: true },
+    intro: { type: "string", required: false },
+    description: { type: "string", required: false },
+    updated: { type: "date", required: false },
+  },
+  computedFields: shopItemComputedFields,
+}));
+
 export default makeSource({
   contentDirPath: "content",
-  documentTypes: [Post, PostsOverview, Event, EventsOverview],
+  documentTypes: [
+    Post,
+    PostsOverview,
+    Event,
+    EventsOverview,
+    ArtCollegeOverview,
+    ArtCollegeSection,
+    ArtCollegeLesson,
+    ShopOverview,
+    ShopItem,
+  ],
   mdx: {
     remarkPlugins: [],
     rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]],

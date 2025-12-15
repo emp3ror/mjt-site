@@ -25,8 +25,9 @@ const content = latestNotesSectionContent as LatestNotesSectionContent;
 
 export function LatestNotesSection({ posts }: LatestNotesSectionProps) {
   return (
-    <section id="latest-notes" className="w-full bg-white/70 py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl space-y-10 rounded-[3rem] bg-[color:var(--base)]/80 p-8 shadow-[0_24px_65px_rgba(98,96,149,0.12)] backdrop-blur-sm sm:p-10 md:px-12">
+    <section id="today-i-learned" className="w-full bg-white/70">
+      <div className="container mx-auto max-w-7xl space-y-10 px-4 py-16 sm:py-20 md:px-8">
+        <div id="latest-notes" className="sr-only" aria-hidden />
         <SectionHeading
           eyebrow={content.heading.eyebrow}
           title={content.heading.title}
