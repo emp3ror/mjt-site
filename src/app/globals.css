@@ -3,8 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #626095;
-  --ink: #626095;
+  --ink: #333333;
   --accent: #f2968a;
+  --highlight-em: #e26656;
   --highlight: #f2968a;
   --base: #ffffff;
   --muted: #b4b8d9;
@@ -73,7 +74,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display), "Baloo 2", cursive;
-  color: var(--highlight);
+  color: var(--highlight-em);
 }
 
 a {
