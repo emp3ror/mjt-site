@@ -10,10 +10,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import navigation from "@content/site/navigation.json";
 import { cn } from "@/lib/cn";
 import { MobileNav } from "@/components/mobile-nav";
+
+const SCROLL_THRESHOLD = 48;
 
 const isActive = (href: string, pathname: string | null) => {
   if (!pathname) return false;
@@ -25,13 +28,30 @@ const isActive = (href: string, pathname: string | null) => {
 export function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isHome) return;
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > SCROLL_THRESHOLD);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
+
+  const transparent = isHome && !scrolled;
 
   return (
     <header
       className={cn(
-        "h-[var(--header-height)]",
+        "h-[var(--header-height)] transition-colors duration-300 ease-out",
         isHome
-          ? "fixed inset-x-0 top-0 z-50 bg-transparent"
+          ? scrolled
+            ? "fixed inset-x-0 top-0 z-50 border-b border-[color:var(--line-strong)]/55 bg-[color:var(--surface)]/88 backdrop-blur-xl shadow-[0_12px_32px_-22px_rgba(15,23,42,0.45)]"
+            : "fixed inset-x-0 top-0 z-50 bg-transparent"
           : "sticky top-0 z-40 border-b border-[color:var(--line-strong)]/65 bg-[color:var(--surface)]/94 backdrop-blur-xl",
       )}
     >
@@ -39,8 +59,8 @@ export function Header() {
         <Link href="/" className="min-w-0">
           <span
             className={cn(
-              "text-[0.68rem] font-medium uppercase tracking-[0.34em]",
-              isHome ? "text-white/85" : "text-[color:var(--muted)]",
+              "text-[0.68rem] font-medium uppercase tracking-[0.34em] transition-colors duration-300",
+              transparent ? "text-white/85" : "text-[color:var(--muted)]",
             )}
           >
             MJT
@@ -50,8 +70,8 @@ export function Header() {
         <nav aria-label="Primary" className="hidden overflow-x-auto sm:block">
           <ul
             className={cn(
-              "flex items-center gap-4 whitespace-nowrap text-[0.96rem] md:gap-6",
-              isHome ? "text-white/80" : "text-[color:var(--ink-soft)]",
+              "flex items-center gap-4 whitespace-nowrap text-[0.96rem] transition-colors duration-300 md:gap-6",
+              transparent ? "text-white/80" : "text-[color:var(--ink-soft)]",
             )}
           >
             {navigation.primary.map((item) => {
@@ -62,11 +82,11 @@ export function Header() {
                     href={item.href}
                     className={cn(
                       "relative pb-1.5 font-medium",
-                      isHome
+                      transparent
                         ? "hover:text-white"
                         : "hover:text-[color:var(--foreground)]",
                       active &&
-                        (isHome ? "text-white" : "text-[color:var(--foreground)]"),
+                        (transparent ? "text-white" : "text-[color:var(--foreground)]"),
                     )}
                   >
                     {item.label}
@@ -74,7 +94,7 @@ export function Header() {
                       aria-hidden
                       className={cn(
                         "absolute inset-x-0 -bottom-px h-px transition-opacity",
-                        isHome ? "bg-white" : "bg-[color:var(--accent)]",
+                        transparent ? "bg-white" : "bg-[color:var(--accent)]",
                         active ? "opacity-100" : "opacity-0",
                       )}
                     />
@@ -88,7 +108,7 @@ export function Header() {
         <MobileNav
           items={navigation.primary}
           socials={navigation.socials}
-          appearance={isHome ? "light" : "default"}
+          appearance={transparent ? "light" : "default"}
         />
       </div>
     </header>
