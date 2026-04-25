@@ -3,6 +3,7 @@
     { "label": "Home", "href": "/" },
     { "label": "Notes", "href": "/posts" },
     { "label": "Gatherings", "href": "/events" },
+    { "label": "Field Log", "href": "/trails" },
     { "label": "Study", "href": "/art-college" },
     { "label": "Shop", "href": "/shop" },
     { "label": "Traces", "href": "/traces" }
@@ -10,6 +11,7 @@
   "homeAnchors": [
     { "label": "Volunteering", "href": "/#volunteering" },
     { "label": "Journal", "href": "/#journal" },
+    { "label": "Trails", "href": "/#trails" },
     { "label": "Stories", "href": "/#stories" },
     { "label": "Contact", "href": "/#contact" }
   ],
@@ -17,6 +19,7 @@
     { "label": "Traces", "href": "/traces" },
     { "label": "Notes", "href": "/posts" },
     { "label": "Gatherings", "href": "/events" },
+    { "label": "Field Log", "href": "/trails" },
     { "label": "Study", "href": "/art-college" },
     { "label": "Shop", "href": "/shop" }
   ],
@@ -37,6 +40,7 @@
     "traces": "Traces",
     "art-college": "Study",
     "events": "Gatherings",
-    "shop": "Shop"
+    "shop": "Shop",
+    "trails": "Field Log"
   }
 }

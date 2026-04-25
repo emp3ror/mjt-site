@@ -16,6 +16,8 @@ import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 
+import { isVisible } from "@/lib/content-visibility";
+
 const CONTENT_DIR = path.join(process.cwd(), "content");
 const MDX_EXTENSION = /\.mdx$/;
 
@@ -32,13 +34,15 @@ export type Post = Doc & {
   title: string;
   description: string;
   date: string;
-  category: "tech" | "art" | "politics" | "art-study" | "personal" | "hike";
+  category: "tech" | "art" | "politics" | "art-study" | "personal" | "hike" | "run";
   tags: string[];
   cover?: string;
+  pullQuote?: string;
   featured?: boolean;
   template?: string;
   gpx?: string;
   checkpoints?: unknown;
+  draft?: boolean;
   slug: string;
   url: string;
   readingTime: string;
@@ -56,6 +60,7 @@ export type Event = Doc & {
   tags?: string[];
   cover?: string;
   registrationUrl?: string;
+  draft?: boolean;
   slug: string;
   url: string;
 };
@@ -65,6 +70,7 @@ export type Overview = Doc & {
   intro?: string;
   description?: string;
   updated?: string;
+  draft?: boolean;
 };
 
 export type ShopItem = Doc & {
@@ -72,6 +78,7 @@ export type ShopItem = Doc & {
   intro?: string;
   description?: string;
   updated?: string;
+  draft?: boolean;
   slug: string;
   url: string;
 };
@@ -145,54 +152,66 @@ const postFiles = walkMdx("posts").filter((p) => !isIndexFile(p));
 const eventFiles = walkMdx("events").filter((p) => !isIndexFile(p));
 const shopFiles = walkMdx("shop").filter((p) => !isIndexFile(p));
 
-export const allPosts: Post[] = postFiles.map((relativePath) => {
-  const parsed = readMdx<Omit<Post, keyof Doc | "slug" | "url" | "readingTime">>(relativePath);
-  const slug = parsed.flattenedPath.replace(/^posts\//, "");
+export const allPosts: Post[] = postFiles
+  .map((relativePath) => {
+    const parsed = readMdx<Omit<Post, keyof Doc | "slug" | "url" | "readingTime">>(relativePath);
+    const slug = parsed.flattenedPath.replace(/^posts\//, "");
 
-  return {
-    ...toDoc(parsed),
-    ...parsed.frontMatter,
-    tags: parsed.frontMatter.tags ?? [],
-    slug,
-    url: `/posts/${slug}`,
-    readingTime: readingTime(parsed.content).text,
-  };
-});
+    return {
+      ...toDoc(parsed),
+      ...parsed.frontMatter,
+      tags: parsed.frontMatter.tags ?? [],
+      slug,
+      url: `/posts/${slug}`,
+      readingTime: readingTime(parsed.content).text,
+    };
+  })
+  .filter(isVisible);
 
-export const allEvents: Event[] = eventFiles.map((relativePath) => {
-  const parsed = readMdx<Omit<Event, keyof Doc | "slug" | "url">>(relativePath);
-  const slug = parsed.flattenedPath.replace(/^events\//, "");
+export const allEvents: Event[] = eventFiles
+  .map((relativePath) => {
+    const parsed = readMdx<Omit<Event, keyof Doc | "slug" | "url">>(relativePath);
+    const slug = parsed.flattenedPath.replace(/^events\//, "");
 
-  return {
-    ...toDoc(parsed),
-    ...parsed.frontMatter,
-    tags: parsed.frontMatter.tags ?? [],
-    slug,
-    url: `/events/${slug}`,
-  };
-});
+    return {
+      ...toDoc(parsed),
+      ...parsed.frontMatter,
+      tags: parsed.frontMatter.tags ?? [],
+      slug,
+      url: `/events/${slug}`,
+    };
+  })
+  .filter(isVisible);
 
-export const allShopItems: ShopItem[] = shopFiles.map((relativePath) => {
-  const parsed = readMdx<Omit<ShopItem, keyof Doc | "slug" | "url">>(relativePath);
-  const slug = parsed.flattenedPath.replace(/^shop\//, "");
+export const allShopItems: ShopItem[] = shopFiles
+  .map((relativePath) => {
+    const parsed = readMdx<Omit<ShopItem, keyof Doc | "slug" | "url">>(relativePath);
+    const slug = parsed.flattenedPath.replace(/^shop\//, "");
 
-  return {
-    ...toDoc(parsed),
-    ...parsed.frontMatter,
-    slug,
-    url: `/shop/posts/${slug}`,
-  };
-});
+    return {
+      ...toDoc(parsed),
+      ...parsed.frontMatter,
+      slug,
+      url: `/shop/posts/${slug}`,
+    };
+  })
+  .filter(isVisible);
 
-export const allPostsOverviews = loadOverview<Pick<Overview, "title" | "intro" | "description" | "updated">>(
-  "posts/index.mdx",
-) as Overview[];
+export const allPostsOverviews = (
+  loadOverview<Pick<Overview, "title" | "intro" | "description" | "updated"> & { draft?: boolean }>(
+    "posts/index.mdx",
+  ) as Overview[]
+).filter(isVisible);
 
-export const allEventsOverviews = loadOverview<Pick<Overview, "title" | "intro" | "description" | "updated">>(
-  "events/index.mdx",
-) as Overview[];
+export const allEventsOverviews = (
+  loadOverview<Pick<Overview, "title" | "intro" | "description" | "updated"> & { draft?: boolean }>(
+    "events/index.mdx",
+  ) as Overview[]
+).filter(isVisible);
 
-export const allShopOverviews = loadOverview<Pick<Overview, "title" | "intro" | "description" | "updated">>(
-  "shop/index.mdx",
-  () => ({ slug: "", url: "/shop" }),
-) as ShopOverview[];
+export const allShopOverviews = (
+  loadOverview<Pick<Overview, "title" | "intro" | "description" | "updated"> & { draft?: boolean }>(
+    "shop/index.mdx",
+    () => ({ slug: "", url: "/shop" }),
+  ) as ShopOverview[]
+).filter(isVisible);

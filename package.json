@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:no-drafts": "SHOW_DRAFTS=false next dev",
     "build": "next build",
+    "build:drafts": "SHOW_DRAFTS=true next build",
     "export": "npm run build",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

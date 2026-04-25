@@ -24,14 +24,5 @@
     "poster": "/hero/hero-poster.jpg",
     "overlayOpacity": 0.62
   },
-  "chips": [
-    { "label": "Base", "value": "Kathmandu, Nepal" },
-    { "label": "Focus", "value": "Editorial web craft" },
-    { "label": "Practice", "value": "Movement, memory, community" }
-  ],
-  "rhythm": {
-    "eyebrow": "Current rhythm",
-    "description": "Shipping interface systems with editorial discipline, making art with patient hands, and supporting local work that strengthens social ties."
-  },
   "scrollLabel": "Scroll"
 }

@@ -39,10 +39,15 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const drawerId = useId();
+  const [lastPathname, setLastPathname] = useState(pathname);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  // Close the drawer when the route changes (e.g. browser back/forward).
+  // React's recommended alternative to calling setState inside an effect:
+  // compare to a stored value and update during render.
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
+    if (open) setOpen(false);
+  }
 
   useEffect(() => {
     if (!open) return;

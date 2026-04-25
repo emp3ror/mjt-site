@@ -3,6 +3,8 @@ import path from "node:path";
 
 import matter from "gray-matter";
 
+import { isVisible } from "./content-visibility";
+
 const ART_COLLEGE_DIR = path.join(process.cwd(), "content", "art-college");
 
 type FrontMatter = {
@@ -12,6 +14,7 @@ type FrontMatter = {
   date?: string;
   updated?: string;
   order?: number;
+  draft?: boolean;
 };
 
 export type ArtCollegeEntry = {
@@ -102,13 +105,26 @@ type BuildEntryOptions = {
 const buildEntry = async (
   slugSegments: string[],
   options: BuildEntryOptions = {},
-): Promise<ArtCollegeEntry> => {
+): Promise<ArtCollegeEntry | null> => {
   const relativePath =
     options.relativeFilePath ?? `${path.join(...slugSegments)}.mdx`;
   const filePath = path.join(ART_COLLEGE_DIR, relativePath);
   const { frontMatter } = await parseMdx(filePath);
 
+  if (!isVisible(frontMatter)) {
+    return null;
+  }
+
   return createEntry(slugSegments, frontMatter);
+};
+
+const pushEntryIfVisible = async (
+  collection: ArtCollegeEntry[],
+  slugSegments: string[],
+  options: BuildEntryOptions = {},
+) => {
+  const entry = await buildEntry(slugSegments, options);
+  if (entry) collection.push(entry);
 };
 
 const sortEntries = (entries: ArtCollegeEntry[]) =>
@@ -136,7 +152,7 @@ const sortSections = (sections: ArtCollegeSection[]) =>
     return a.title.localeCompare(b.title);
   });
 
-const readSection = async (sectionSlug: string): Promise<ArtCollegeSection> => {
+const readSection = async (sectionSlug: string): Promise<ArtCollegeSection | null> => {
   const directoryPath = path.join(ART_COLLEGE_DIR, sectionSlug);
   const dirents = await safeReadDir(directoryPath);
 
@@ -150,11 +166,9 @@ const readSection = async (sectionSlug: string): Promise<ArtCollegeSection> => {
       const absoluteIndexPath = path.join(ART_COLLEGE_DIR, relativeIndexPath);
 
       if (await pathExists(absoluteIndexPath)) {
-        entries.push(
-          await buildEntry([sectionSlug, subDirectorySlug], {
-            relativeFilePath: relativeIndexPath,
-          }),
-        );
+        await pushEntryIfVisible(entries, [sectionSlug, subDirectorySlug], {
+          relativeFilePath: relativeIndexPath,
+        });
       } else {
         entries.push(createEntry([sectionSlug, subDirectorySlug]));
       }
@@ -173,7 +187,11 @@ const readSection = async (sectionSlug: string): Promise<ArtCollegeSection> => {
     }
 
     const fileSlug = dirent.name.replace(mdxExtension, "");
-    entries.push(await buildEntry([sectionSlug, fileSlug]));
+    await pushEntryIfVisible(entries, [sectionSlug, fileSlug]);
+  }
+
+  if (meta && !isVisible(meta)) {
+    return null;
   }
 
   sortEntries(entries);
@@ -199,7 +217,8 @@ export const getArtCollegeListing = async (): Promise<ArtCollegeListing> => {
 
   for (const dirent of dirents) {
     if (dirent.isDirectory()) {
-      sections.push(await readSection(dirent.name));
+      const section = await readSection(dirent.name);
+      if (section) sections.push(section);
       continue;
     }
 
@@ -219,7 +238,7 @@ export const getArtCollegeListing = async (): Promise<ArtCollegeListing> => {
     }
 
     const fileSlug = dirent.name.replace(mdxExtension, "");
-    rootEntries.push(await buildEntry([fileSlug]));
+    await pushEntryIfVisible(rootEntries, [fileSlug]);
   }
 
   sortEntries(rootEntries);
@@ -257,11 +276,9 @@ export const getArtCollegeSection = async (
       const absoluteIndexPath = path.join(ART_COLLEGE_DIR, relativeIndexPath);
 
       if (await pathExists(absoluteIndexPath)) {
-        entries.push(
-          await buildEntry([...slugSegments, childSlug], {
-            relativeFilePath: relativeIndexPath,
-          }),
-        );
+        await pushEntryIfVisible(entries, [...slugSegments, childSlug], {
+          relativeFilePath: relativeIndexPath,
+        });
       } else {
         entries.push(createEntry([...slugSegments, childSlug]));
       }
@@ -280,7 +297,11 @@ export const getArtCollegeSection = async (
     }
 
     const fileSlug = dirent.name.replace(mdxExtension, "");
-    entries.push(await buildEntry([...slugSegments, fileSlug]));
+    await pushEntryIfVisible(entries, [...slugSegments, fileSlug]);
+  }
+
+  if (meta && !isVisible(meta)) {
+    return null;
   }
 
   sortEntries(entries);
@@ -310,6 +331,9 @@ export const getArtCollegeEntry = async (slugSegments: string[]) => {
 
     try {
       const { frontMatter, content } = await parseMdx(targetPath);
+      if (!isVisible(frontMatter)) {
+        return null;
+      }
       return {
         frontMatter,
         content,
@@ -330,6 +354,7 @@ export const getAllArtCollegeSlugs = async (): Promise<string[][]> => {
 
   const walk = async (currentDir: string, prefix: string[]) => {
     const dirents = await safeReadDir(currentDir);
+    let indexIsVisible = false;
     let hasIndex = false;
 
     for (const dirent of dirents) {
@@ -346,6 +371,13 @@ export const getAllArtCollegeSlugs = async (): Promise<string[][]> => {
 
       if (dirent.name === "index.mdx") {
         hasIndex = true;
+        const { frontMatter } = await parseMdx(nextPath);
+        indexIsVisible = isVisible(frontMatter);
+        continue;
+      }
+
+      const { frontMatter } = await parseMdx(nextPath);
+      if (!isVisible(frontMatter)) {
         continue;
       }
 
@@ -353,7 +385,7 @@ export const getAllArtCollegeSlugs = async (): Promise<string[][]> => {
       slugs.push([...prefix, slug]);
     }
 
-    if (hasIndex && prefix.length > 0) {
+    if (hasIndex && indexIsVisible && prefix.length > 0) {
       slugs.push([...prefix]);
     }
   };

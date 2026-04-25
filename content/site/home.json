@@ -1,9 +1,14 @@
 {
   "volunteering": {
     "eyebrow": "Volunteering",
-    "title": "Community work told at full width.",
-    "description": "The loudest parts of this site are reserved for collective effort: workshops, assemblies, and small acts of care that deserve more than a thumbnail.",
-    "callToActionLabel": "Read the full story",
+    "title": "Volunteering as a continuous practice.",
+    "description": "Workshops, assemblies, and quiet acts of care \u2014 told at the same scale they were lived.",
+    "kindLabels": {
+      "gathering": "Gathering",
+      "note": "Note"
+    },
+    "gatheringCtaLabel": "See the gathering",
+    "noteCtaLabel": "Open the note",
     "fallbackLocation": "Kathmandu Valley",
     "supportingPostTags": ["community", "civic-tech"],
     "maxSlides": 4,
@@ -18,6 +23,20 @@
     "description": "Reflections stay closer to the page: slower, lighter, and easier to read in one sitting.",
     "maxEntries": 4,
     "excerptLength": 220
+  },
+  "trails": {
+    "eyebrow": "Field Log",
+    "title": "The body keeps a map of its own.",
+    "description": "Trails and runs that left a GPS trace \u2014 read at a glance, then opened up if the route asks for it.",
+    "kindLabels": {
+      "hike": "Hike",
+      "run": "Run"
+    },
+    "featuredCtaLabel": "Trace the route",
+    "secondaryCtaLabel": "Open log",
+    "indexCtaLabel": "Open the field log",
+    "indexHref": "/trails",
+    "maxFeatured": 4
   },
   "stories": {
     "eyebrow": "Stories & Experiments",

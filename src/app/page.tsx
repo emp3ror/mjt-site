@@ -1,9 +1,11 @@
 import { HomeHero } from "@/components/home/home-hero";
 import { JournalSection } from "@/components/home/journal-section";
 import { StoriesSection } from "@/components/home/stories-section";
+import { TrailsSection } from "@/components/home/trails-section";
 import { VolunteeringSection } from "@/components/home/volunteering-section";
 import { allEvents, allPosts } from "@/content";
 import { formatDate as formatDateBase } from "@/lib/format";
+import { allTrails } from "@/lib/trails";
 
 const formatDate = (value?: string) => formatDateBase(value, "short") ?? "Ongoing";
 
@@ -23,6 +25,7 @@ export default function Home() {
       <HomeHero />
       <VolunteeringSection events={events} posts={posts} formatDate={formatDate} />
       <JournalSection posts={posts} formatDate={formatDate} />
+      <TrailsSection trails={allTrails} formatDate={formatDate} />
       <StoriesSection posts={posts} />
     </div>
   );

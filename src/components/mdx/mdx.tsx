@@ -20,6 +20,7 @@ type CodeProps = ComponentPropsWithoutRef<"code">;
 
 type MdxContainerProps = {
   children: ReactNode;
+  className?: string;
 };
 
 export const mdxComponents = {
@@ -118,6 +119,6 @@ export const mdxComponents = {
   hr: () => <hr className="my-14 border-0 border-t border-[color:var(--line)]" />,
 };
 
-export function MdxContainer({ children }: MdxContainerProps) {
-  return <div className="mdx-content">{children}</div>;
+export function MdxContainer({ children, className }: MdxContainerProps) {
+  return <div className={cn("mdx-content", className)}>{children}</div>;
 }
