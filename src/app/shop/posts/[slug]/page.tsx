@@ -1,14 +1,12 @@
 import { cache } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 
-import { Badge } from "@/components/badge";
-import { ContactSection } from "@/components/home/contact-section";
-import { DoodleDivider } from "@/components/doodle-divider";
+import { LongformEntry } from "@/components/longform-entry";
 import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
-import { SectionHeading } from "@/components/section-heading";
-import type { ShopItem } from "contentlayer/generated";
-import { allShopItems } from "contentlayer/generated";
+import { allShopItems, type ShopItem } from "@/content";
+import { formatDate } from "@/lib/format";
 
 type ShopPostPageProps = {
   params: Promise<{
@@ -30,13 +28,6 @@ const renderContent = cache(async (source: string) => {
   return content;
 });
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(new Date(value));
-
 export const generateStaticParams = () =>
   allShopItems.map((item) => ({
     slug: item.slug,
@@ -53,30 +44,44 @@ export default async function ShopPostPage({ params }: ShopPostPageProps) {
   const content = await renderContent(item.body.raw);
 
   return (
-    <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col gap-12 px-6 pb-24 pt-24">
-      <section className="space-y-6">
-        <Badge className="bg-white/85 text-[color:var(--accent)]">Shop Post</Badge>
-        <SectionHeading
-          title={item.title}
-          description={item.description ?? "Studio-made item details and ordering notes."}
-        />
-
-        {item.intro ? (
-          <p className="max-w-3xl text-sm text-[color:var(--ink)]/70">{item.intro}</p>
-        ) : null}
-
+    <LongformEntry
+      className="longform-note"
+      backHref="/shop"
+      backLabel="Back to shop"
+      eyebrow="Shop drop"
+      title={item.title}
+      description={item.description}
+      meta={[
+        { label: "Updated", value: formatDate(item.updated, "long") },
+        { label: "Format", value: "Small batch" },
+      ]}
+    >
+      <div className="space-y-12">
         <MdxContainer>{content}</MdxContainer>
 
-        {item.updated ? (
-          <p className="text-xs uppercase tracking-[0.3em] text-[color:var(--muted)]">
-            Updated {formatDate(item.updated)}
+        <aside className="rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-7 md:p-8">
+          <p className="eyebrow">Request a run</p>
+          <p className="mt-3 max-w-[52ch] text-[1rem] leading-7 text-[color:var(--ink-soft)]">
+            Want this drop, a bespoke variant, or a longer run? Send a note with quantities, sizes,
+            and any artwork references — I&rsquo;ll reply with a proof and a quote.
           </p>
-        ) : null}
-      </section>
-
-      <DoodleDivider variant="lotus" colorClassName="text-[color:var(--muted)]/50" />
-
-      <ContactSection />
-    </div>
+          <div className="mt-5 flex flex-wrap gap-3 text-sm">
+            <Link
+              href="/#contact"
+              className="inline-flex items-center gap-2 rounded-full bg-[color:var(--foreground)] px-5 py-2.5 font-medium text-[color:var(--background)] transition hover:-translate-y-0.5"
+            >
+              Request a run
+              <span aria-hidden>→</span>
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 font-medium text-[color:var(--ink-soft)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--foreground)]"
+            >
+              Browse other drops
+            </Link>
+          </div>
+        </aside>
+      </div>
+    </LongformEntry>
   );
 }

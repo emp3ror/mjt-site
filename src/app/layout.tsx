@@ -1,32 +1,33 @@
 import type { Metadata } from "next";
-import { Baloo_2, Inter } from "next/font/google";
+import { Inter_Tight, Newsreader } from "next/font/google";
+
 import "./globals.css";
 
 import { Footer } from "@/components/footer";
-import { SubpageNavigation } from "@/components/subpage-navigation";
+import { Header } from "@/components/header";
 import { PageSurface } from "@/components/page-surface";
-const baloo = Baloo_2({
+import { SubpageNavigation } from "@/components/subpage-navigation";
+
+const newsreader = Newsreader({
   subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-serif",
   display: "swap",
 });
 
-const inter = Inter({
+const interTight = Inter_Tight({
   subsets: ["latin"],
   variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mjt.example"),
+  metadataBase: new URL("https://www.mjt.com.np"),
   title: {
-    default: "Manish Jung Thapa — Studio Notes",
-    template: "%s · mjt",
+    default: "Manish Jung Thapa",
+    template: "%s · Manish Jung Thapa",
   },
   description:
-    "An MDX-powered static site sketching ideas across tech builds, personal essays, and art studies.",
+    "A living archive of work, study, movement, and community by Manish Jung Thapa.",
 };
 
 export default function RootLayout({
@@ -36,8 +37,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${baloo.variable} ${inter.variable} antialiased font-sans`}>
+      <body className={`${newsreader.variable} ${interTight.variable} site-shell antialiased`}>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
         <div className="flex min-h-screen flex-col">
+          <Header />
           <SubpageNavigation />
           <PageSurface>{children}</PageSurface>
           <Footer />

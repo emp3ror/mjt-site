@@ -1,146 +1,102 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { ChapterHeader } from "@/components/chapter-header";
+import { EditorialDivider } from "@/components/editorial-divider";
+import { TraceCard } from "@/components/trace-card";
 import { getArtCollegeListing } from "@/lib/art-college";
+import { formatDate } from "@/lib/format";
+import type { Trace } from "@/lib/traces";
 
 export const metadata: Metadata = {
-  title: "Art College",
+  title: "Study",
   description:
-    "Modules, critiques, and studio experiments collected from the Art College archive.",
+    "Modules, critiques, and studio experiments collected from the art college archive.",
 };
 
-const formatDate = (value?: string) =>
-  value
-    ? new Intl.DateTimeFormat("en", {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-      }).format(new Date(value))
-    : undefined;
+const entryToTrace = (entry: {
+  href: string;
+  title: string;
+  description?: string;
+  date?: string;
+  updated?: string;
+}): Trace => ({
+  id: entry.href,
+  kind: "study",
+  kindLabel: "Study",
+  title: entry.title,
+  description: entry.description,
+  href: entry.href,
+  date: entry.date,
+  displayDate: formatDate(entry.updated ?? entry.date, "short"),
+  tags: [],
+  category: "art-college",
+  sortDate: entry.updated ?? entry.date ?? "1970-01-01",
+});
 
 export default async function ArtCollegePage() {
   const { page, rootEntries, sections } = await getArtCollegeListing();
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-12 px-6 py-16">
-      <header className="space-y-4">
-        <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
-          Studio syllabus
-        </p>
-        <div className="space-y-3">
-          <h1 className="text-4xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-            {page.title}
-          </h1>
-          {page.intro ? (
-            <p className="max-w-2xl text-base text-neutral-600 dark:text-neutral-300">
-              {page.intro}
-            </p>
-          ) : null}
-          {page.description ? (
-            <p className="max-w-2xl text-sm text-neutral-500 dark:text-neutral-400">
-              {page.description}
-            </p>
-          ) : null}
-        </div>
-        {page.updated ? (
-          <p className="text-xs uppercase tracking-[0.25em] text-neutral-400">
-            Last updated {formatDate(page.updated)}
-          </p>
-        ) : null}
-      </header>
+    <div className="page-wrap section-block">
+      <ChapterHeader
+        eyebrow="Chapter"
+        title={page.title}
+        description={
+          page.intro ??
+          page.description ??
+          "Coursework, critiques, exercises, and studio notes kept inside the larger archive."
+        }
+      />
 
       {rootEntries.length > 0 ? (
-        <section className="space-y-5">
-          <h2 className="text-lg font-medium text-neutral-800 dark:text-neutral-200">
-            Loose notes
-          </h2>
-          <ul className="grid gap-6 sm:grid-cols-2">
-            {rootEntries.map((entry) => (
-              <li
-                key={entry.href}
-                className="group flex h-full flex-col rounded-2xl border border-neutral-200/80 bg-white/80 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-neutral-800/70 dark:bg-neutral-900/70"
-              >
-                {formatDate(entry.updated ?? entry.date) ? (
-                  <span className="text-xs uppercase tracking-[0.25em] text-neutral-400">
-                    {formatDate(entry.updated ?? entry.date)}
-                  </span>
-                ) : null}
-                <Link
-                  href={entry.href}
-                  className="mt-2 text-xl font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-neutral-100 dark:group-hover:text-blue-400"
-                >
-                  {entry.title}
-                </Link>
-                {entry.description ? (
-                  <p className="mt-3 flex-1 text-sm text-neutral-600 dark:text-neutral-300">
-                    {entry.description}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <>
+          <EditorialDivider className="my-12 md:my-14" />
+          <section className="space-y-7">
+            <div className="space-y-2">
+              <p className="eyebrow">Loose notes</p>
+              <h2 className="text-[2rem] leading-[1.08] tracking-[-0.02em] md:text-[2.55rem]">Standalone study fragments.</h2>
+            </div>
+            <div className="trace-grid">
+              {rootEntries.map((entry, index) => (
+                <TraceCard
+                  key={entry.href}
+                  trace={entryToTrace(entry)}
+                  className={index % 2 === 0 ? "md:col-span-7" : "md:col-span-5"}
+                />
+              ))}
+            </div>
+          </section>
+        </>
       ) : null}
 
-      <div className="space-y-16">
-        {sections.map((section) => (
-          <section key={section.slug} className="space-y-6">
-            <header className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                  {section.title}
-                </h2>
-                <span className="inline-flex items-center rounded-full border border-neutral-200/70 px-4 py-1 text-xs uppercase tracking-[0.25em] text-neutral-500 dark:border-neutral-700/70 dark:text-neutral-400">
-                  {section.slug.replace(/[-_]/g, " ")}
-                </span>
+      <div className="mt-14 space-y-14">
+        {sections.map((section) => {
+          const sectionBlurb = section.intro ?? section.description;
+          return (
+            <section key={section.slug} className="space-y-7">
+              <div className="space-y-4 border-t border-[color:var(--line)] pt-9">
+                <p className="eyebrow">{section.slug.replace(/[-_]/g, " ")}</p>
+                <h2 className="max-w-[18ch] text-[2rem] leading-[1.08] tracking-[-0.02em] md:text-[2.55rem]">{section.title}</h2>
+                {sectionBlurb ? (
+                  <p className="body-copy max-w-[62ch] text-[color:var(--ink-soft)]">
+                    {sectionBlurb}
+                  </p>
+                ) : null}
               </div>
-              {section.description ? (
-                <p className="max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
-                  {section.description}
-                </p>
-              ) : null}
-              {section.intro ? (
-                <p className="max-w-2xl text-xs text-neutral-500 dark:text-neutral-400">
-                  {section.intro}
-                </p>
-              ) : null}
-            </header>
 
-            {section.entries.length > 0 ? (
-              <ul className="grid gap-6 sm:grid-cols-2">
-                {section.entries.map((entry) => (
-                  <li
+              <div className="trace-grid">
+                {section.entries.map((entry, index) => (
+                  <TraceCard
                     key={entry.href}
-                    className="group flex h-full flex-col rounded-2xl border border-neutral-200/80 bg-white/80 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-neutral-800/70 dark:bg-neutral-900/70"
-                  >
-                    {formatDate(entry.updated ?? entry.date) ? (
-                      <span className="text-xs uppercase tracking-[0.25em] text-neutral-400">
-                        {formatDate(entry.updated ?? entry.date)}
-                      </span>
-                    ) : null}
-                    <Link
-                      href={entry.href}
-                      className="mt-2 text-xl font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-neutral-100 dark:group-hover:text-blue-400"
-                    >
-                      {entry.title}
-                    </Link>
-                    {entry.description ? (
-                      <p className="mt-3 flex-1 text-sm text-neutral-600 dark:text-neutral-300">
-                        {entry.description}
-                      </p>
-                    ) : null}
-                  </li>
+                    trace={entryToTrace(entry)}
+                    className={index % 2 === 0 ? "md:col-span-7" : "md:col-span-5"}
+                  />
                 ))}
-              </ul>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-neutral-200/80 bg-white/40 px-6 py-8 text-sm text-neutral-400 dark:border-neutral-700/60 dark:bg-neutral-900/40 dark:text-neutral-500">
-                Work in progress—notes are being assembled here.
               </div>
-            )}
-          </section>
-        ))}
+            </section>
+          );
+        })}
       </div>
     </div>
   );
 }
-

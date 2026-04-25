@@ -1,7 +1,12 @@
 "use client";
 
+/**
+ * Event-specific wrapper around `ContentActions`. Adds Google / Outlook /
+ * .ics calendar export options and a header that previews the event time.
+ */
+
 import { CalendarDays, CalendarPlus, Download } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { ContentActions } from "@/components/actions/content-actions";
 import { buildGoogleCalendarLink, buildIcsDataUri, buildMicrosoftCalendarLink } from "@/lib/calendar";
@@ -25,14 +30,7 @@ const BOOKMARK_KEY = "mjt-bookmarked-events";
 const LIKE_KEY = "mjt-liked-events";
 
 export function EventActions({ event }: EventActionsProps) {
-  const [origin, setOrigin] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    setOrigin(window.location.origin);
-  }, []);
+  const origin = typeof window === "undefined" ? null : window.location.origin;
 
   const eventUrl = useMemo(() => {
     if (!origin) {
@@ -96,8 +94,8 @@ export function EventActions({ event }: EventActionsProps) {
       }}
       header={
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">Event tools</p>
-          <p className="mt-1 text-sm text-[color:var(--ink)]/70">
+          <p className="eyebrow">Event tools</p>
+          <p className="mt-2 text-sm leading-7 text-[color:var(--ink-soft)]">
             {formatEventDateRange({
               date: event.date,
               endDate: event.endDate,

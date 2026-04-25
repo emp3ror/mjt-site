@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Identity and craft",
+  "name": {
+    "first": "Manish",
+    "last": "Jung Thapa"
+  },
+  "craftLine": {
+    "prefix": "Designing and building",
+    "emphasis": "editorial digital experiences",
+    "suffix": "that help communities document, organize, and move work forward."
+  },
+  "description": "I work across interface design, frontend systems, and storytelling-first publishing so ideas are clear, useful, and built to last.",
+  "primaryCta": {
+    "label": "Explore community work",
+    "href": "#volunteering"
+  },
+  "secondaryCta": {
+    "label": "Read latest notes",
+    "href": "/posts"
+  },
+  "backgroundVideo": {
+    "mp4": "/hero/hero-bg.mp4",
+    "webm": "/hero/hero-bg.webm",
+    "poster": "/hero/hero-poster.jpg",
+    "overlayOpacity": 0.62
+  },
+  "chips": [
+    { "label": "Base", "value": "Kathmandu, Nepal" },
+    { "label": "Focus", "value": "Editorial web craft" },
+    { "label": "Practice", "value": "Movement, memory, community" }
+  ],
+  "rhythm": {
+    "eyebrow": "Current rhythm",
+    "description": "Shipping interface systems with editorial discipline, making art with patient hands, and supporting local work that strengthens social ties."
+  },
+  "scrollLabel": "Scroll"
+}

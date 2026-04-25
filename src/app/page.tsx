@@ -1,42 +1,29 @@
-import MjtBanner from "@/components/mjt-banner";
-import { AboutSection } from "@/components/home/about-section";
-import { LatestNotesSection } from "@/components/home/latest-notes-section";
-import { SocialHighlightsSection } from "@/components/home/social-highlights-section";
-import { ContactSection } from "@/components/home/contact-section";
-import type { Post } from "contentlayer/generated";
-import { allPosts } from "contentlayer/generated";
+import { HomeHero } from "@/components/home/home-hero";
+import { JournalSection } from "@/components/home/journal-section";
+import { StoriesSection } from "@/components/home/stories-section";
+import { VolunteeringSection } from "@/components/home/volunteering-section";
+import { allEvents, allPosts } from "@/content";
+import { formatDate as formatDateBase } from "@/lib/format";
 
-const posts = [...allPosts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const formatDate = (value?: string) => formatDateBase(value, "short") ?? "Ongoing";
 
-type EnhancedPost = Post & { featured?: boolean };
+const byNewest = <T extends { date: string; endDate?: string }>(items: T[]) =>
+  [...items].sort(
+    (a, b) =>
+      new Date(b.endDate ?? b.date).getTime() -
+      new Date(a.endDate ?? a.date).getTime(),
+  );
 
 export default function Home() {
-  const latestPosts = posts.slice(0, 3) as EnhancedPost[];
+  const posts = byNewest(allPosts);
+  const events = byNewest(allEvents);
 
   return (
-    <main className="flex flex-col gap-0">
-      <MjtBanner />
-      {/* <HeroSection /> */}
-
-      {/* <DoodleDivider variant="cloud" colorClassName="text-[color:var(--muted)]/60" /> */}
-
-      <AboutSection />
-
-      {/* <ExperienceSection /> */}
-
-      {/* <SkillsSection /> */}
-
-      {/* <DoodleDivider variant="lotus" colorClassName="text-[color:var(--accent)]/50" /> */}
-
-      {/* <WorksSection /> */}
-
-      {/* <TestimonialsSection /> */}
-
-      <LatestNotesSection posts={latestPosts} />
-
-      <SocialHighlightsSection />
-
-      <ContactSection />
-    </main>
+    <div className="pb-20 md:pb-28">
+      <HomeHero />
+      <VolunteeringSection events={events} posts={posts} formatDate={formatDate} />
+      <JournalSection posts={posts} formatDate={formatDate} />
+      <StoriesSection posts={posts} />
+    </div>
   );
 }

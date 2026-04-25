@@ -1,83 +1,57 @@
+/**
+ * Site footer: closing note, primary nav, archive index, and contact links.
+ * All copy and links come from `content/site/navigation.json`.
+ */
+
 import Link from "next/link";
 
-import { DoodleDivider } from "@/components/doodle-divider";
+import navigation from "@content/site/navigation.json";
 
-const navigation = [
-  { label: "Portfolio", href: "#works" },
-  { label: "Experience", href: "#experience" },
-  { label: "Art College", href: "/art-college" },
-  { label: "Latest Notes", href: "#latest-notes" },
-];
+const isExternal = (href: string) => href.startsWith("http");
 
-const socials = [
-  { label: "Email", href: "mailto:hello@mjt.studio" },
-  { label: "Behance", href: "https://www.behance.net" },
-  { label: "Dribbble", href: "https://dribbble.com" },
-  { label: "Instagram", href: "https://www.instagram.com" },
-  { label: "LinkedIn", href: "https://www.linkedin.com" },
-];
+type FooterLink = { label: string; href: string };
+
+function LinkColumn({ title, links }: { title: string; links: FooterLink[] }) {
+  return (
+    <div className="space-y-4 md:space-y-5">
+      <p className="eyebrow">{title}</p>
+      <ul className="space-y-2.5 text-[0.98rem] text-[color:var(--ink-soft)]">
+        {links.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className="hover:text-[color:var(--foreground)]"
+              target={isExternal(item.href) ? "_blank" : undefined}
+              rel={isExternal(item.href) ? "noreferrer" : undefined}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function Footer() {
+  const { primary, archive, socials, footer } = navigation;
+
   return (
-    <footer className="relative overflow-hidden bg-[color:var(--ink)] text-white/90">
-      <div className="absolute inset-x-0 top-0">
-        <DoodleDivider variant="line" colorClassName="text-white/20" />
-      </div>
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-12 px-6 pb-14 pt-20 md:flex-row md:items-start md:justify-between">
-        <div className="max-w-xl space-y-5">
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
-            MJT Studio
-          </p>
-          <h2 className="text-4xl font-semibold text-white">
-            Staying playful while shipping thoughtful design systems.
-          </h2>
-          <p className="text-sm text-white/80">
-            Portfolio snapshots, art studies, and experiments in community-led design.
-            Come back often; the sketchbook is always open.
-          </p>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/60">
-            © {new Date().getFullYear()} MJT Studio
+    <footer className="mt-24 border-t border-[color:var(--line-strong)]/50 bg-[color:var(--surface)]/76">
+      <div className="page-wrap grid gap-10 py-14 md:grid-cols-[1.15fr_0.7fr_0.75fr_0.75fr] md:py-16">
+        <div className="space-y-6">
+          <p className="eyebrow">{footer.eyebrow}</p>
+          <h2 className="max-w-md text-[2.05rem] leading-tight md:text-[2.7rem]">{footer.title}</h2>
+          <p className="body-copy max-w-lg text-[color:var(--ink-soft)]">{footer.description}</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            © {new Date().getFullYear()} {footer.copyrightName}
           </p>
         </div>
 
-        <div className="grid w-full max-w-md gap-10 sm:grid-cols-2">
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
-              Navigate
-            </h3>
-            <ul className="space-y-3 text-sm text-white/75">
-              {navigation.map((item) => (
-                <li key={item.href}>
-                  <Link className="transition hover:text-[color:var(--leaf)]/80" href={item.href}>
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
-              Connect
-            </h3>
-            <ul className="space-y-3 text-sm text-white/75">
-              {socials.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    className="transition hover:text-[color:var(--leaf)]/80"
-                    href={item.href}
-                    target={item.href.startsWith("http") ? "_blank" : undefined}
-                    rel={item.href.startsWith("http") ? "noreferrer" : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <LinkColumn title="Navigate" links={primary} />
+        <LinkColumn title="Archive" links={archive} />
+        <LinkColumn title="Contact" links={socials} />
       </div>
-      <div className="absolute -bottom-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-white/10 blur-3xl" aria-hidden />
     </footer>
   );
 }

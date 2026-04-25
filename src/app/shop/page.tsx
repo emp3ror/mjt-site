@@ -6,8 +6,8 @@ import { Badge } from "@/components/badge";
 import { DoodleDivider } from "@/components/doodle-divider";
 import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
 import { SectionHeading } from "@/components/section-heading";
-import type { ShopItem, ShopOverview } from "contentlayer/generated";
-import { allShopItems, allShopOverviews } from "contentlayer/generated";
+import { allShopItems, allShopOverviews, type ShopItem, type ShopOverview } from "@/content";
+import { formatDate as formatDateShared } from "@/lib/format";
 import { Package, Sparkles, Truck, ShoppingBag } from "lucide-react";
 
 const renderOverview = cache(async (source: string) => {
@@ -24,12 +24,7 @@ const renderOverview = cache(async (source: string) => {
   return content;
 });
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(new Date(value));
+const formatDate = (value: string) => formatDateShared(value, "short") ?? "";
 
 const sortItems = (items: ShopItem[]) =>
   [...items].sort((a, b) => {
@@ -46,11 +41,11 @@ export default async function ShopPage() {
   const overviewContent = overview ? await renderOverview(overview.body.raw) : null;
 
   return (
-    <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-16 px-6 pb-24 pt-24">
+    <div className="page-wrap section-block flex min-h-screen flex-col gap-16">
       <section className="space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <Badge className="bg-white/85 text-[color:var(--accent)]">Shop</Badge>
-          <div className="flex items-center gap-2 rounded-full bg-[color:var(--ink)]/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--muted)]">
+          <div className="flex items-center gap-2 rounded-full bg-[color:var(--foreground)]/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--muted)]">
             <ShoppingBag size={14} />
             Studio storefront
           </div>
@@ -61,7 +56,7 @@ export default async function ShopPage() {
         />
 
         {overview?.intro ? (
-          <p className="max-w-3xl text-sm text-[color:var(--ink)]/70">{overview.intro}</p>
+          <p className="max-w-3xl text-sm text-[color:var(--foreground)]/70">{overview.intro}</p>
         ) : null}
 
         {overviewContent ? <MdxContainer>{overviewContent}</MdxContainer> : null}
@@ -80,7 +75,7 @@ export default async function ShopPage() {
           ].map(({ icon: Icon, label }) => (
             <span
               key={label}
-              className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-[color:var(--ink)] shadow-sm ring-1 ring-[color:var(--muted)]/50"
+              className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--muted)]/50"
             >
               <Icon size={16} className="text-[color:var(--accent)]" />
               {label}
@@ -97,7 +92,7 @@ export default async function ShopPage() {
             <Link
               key={item._id}
               href={item.url}
-              className="group block h-full rounded-[2rem] border border-[color:var(--muted)]/60 bg-gradient-to-b from-white/95 via-white to-[color:var(--ink)]/2 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(44,45,94,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)]"
+              className="group block h-full rounded-[2rem] border border-[color:var(--muted)]/60 bg-gradient-to-b from-white/95 via-white to-[color:var(--foreground)]/2 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(44,45,94,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-3">
@@ -106,14 +101,14 @@ export default async function ShopPage() {
                     Buyable drop
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-[color:var(--ink)] transition group-hover:text-[color:var(--accent)]">
+                    <h3 className="text-lg font-semibold text-[color:var(--foreground)] transition group-hover:text-[color:var(--accent)]">
                       {item.title}
                     </h3>
                     {item.intro ? (
-                      <p className="text-sm text-[color:var(--ink)]/70">{item.intro}</p>
+                      <p className="text-sm text-[color:var(--foreground)]/70">{item.intro}</p>
                     ) : null}
                     {item.description ? (
-                      <p className="text-xs text-[color:var(--ink)]/60">{item.description}</p>
+                      <p className="text-xs text-[color:var(--foreground)]/60">{item.description}</p>
                     ) : null}
                   </div>
                 </div>
@@ -131,8 +126,8 @@ export default async function ShopPage() {
                     New in stock
                   </p>
                 )}
-                <span className="inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] text-white px-4 py-2 text-sm font-semibold transition group-hover:bg-[color:var(--accent)]">
-                  Buy / Details
+                <span className="inline-flex items-center gap-2 rounded-full bg-[color:var(--foreground)] text-white px-4 py-2 text-sm font-semibold transition group-hover:bg-[color:var(--accent)]">
+                  View details
                   <Sparkles size={16} className="text-white/80" />
                 </span>
               </div>
@@ -140,8 +135,8 @@ export default async function ShopPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-[2.5rem] border border-dashed border-[color:var(--muted)]/60 bg-white/70 px-8 py-16 text-center text-sm text-[color:var(--ink)]/60">
-          <p className="text-lg font-semibold text-[color:var(--ink)]">No items yet</p>
+        <div className="rounded-[2.5rem] border border-dashed border-[color:var(--muted)]/60 bg-white/70 px-8 py-16 text-center text-sm text-[color:var(--foreground)]/60">
+          <p className="text-lg font-semibold text-[color:var(--foreground)]">No items yet</p>
           <p className="mt-2">The shop shelf is being restocked. Check back soon.</p>
         </div>
       )}

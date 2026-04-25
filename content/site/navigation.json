@@ -1,0 +1,42 @@
+{
+  "primary": [
+    { "label": "Home", "href": "/" },
+    { "label": "Notes", "href": "/posts" },
+    { "label": "Gatherings", "href": "/events" },
+    { "label": "Study", "href": "/art-college" },
+    { "label": "Shop", "href": "/shop" },
+    { "label": "Traces", "href": "/traces" }
+  ],
+  "homeAnchors": [
+    { "label": "Volunteering", "href": "/#volunteering" },
+    { "label": "Journal", "href": "/#journal" },
+    { "label": "Stories", "href": "/#stories" },
+    { "label": "Contact", "href": "/#contact" }
+  ],
+  "archive": [
+    { "label": "Traces", "href": "/traces" },
+    { "label": "Notes", "href": "/posts" },
+    { "label": "Gatherings", "href": "/events" },
+    { "label": "Study", "href": "/art-college" },
+    { "label": "Shop", "href": "/shop" }
+  ],
+  "socials": [
+    { "label": "Email", "href": "mailto:hello@mjt.studio" },
+    { "label": "Instagram", "href": "https://www.instagram.com" },
+    { "label": "LinkedIn", "href": "https://www.linkedin.com" }
+  ],
+  "footer": {
+    "eyebrow": "Closing note",
+    "title": "A personal field journal shaped by signal, silence, and sustained attention.",
+    "description": "This site stays intentionally unfinished: part documentary sequence, part notebook, part archive of work, movement, and care.",
+    "copyrightName": "Manish Jung Thapa"
+  },
+  "breadcrumbLabels": {
+    "posts": "Notes",
+    "tags": "Tags",
+    "traces": "Traces",
+    "art-college": "Study",
+    "events": "Gatherings",
+    "shop": "Shop"
+  }
+}

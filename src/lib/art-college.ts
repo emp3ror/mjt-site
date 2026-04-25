@@ -89,7 +89,7 @@ const createEntry = (slugSegments: string[], frontMatter: FrontMatter = {}): Art
   slug: slugSegments,
   href: buildHref(slugSegments),
   title: frontMatter.title ?? toTitleCase(slugSegments.at(-1) ?? "Untitled"),
-  description: frontMatter.description ?? frontMatter.intro,
+  description: frontMatter.description,
   date: frontMatter.date,
   updated: frontMatter.updated ?? frontMatter.date,
   order: frontMatter.order,
@@ -211,7 +211,7 @@ export const getArtCollegeListing = async (): Promise<ArtCollegeListing> => {
       const { frontMatter } = await parseMdx(path.join(ART_COLLEGE_DIR, dirent.name));
       pageMeta = {
         title: frontMatter.title ?? "Art College",
-        intro: frontMatter.intro ?? frontMatter.description,
+        intro: frontMatter.intro,
         description: frontMatter.description,
         updated: frontMatter.updated,
       };
@@ -229,6 +229,69 @@ export const getArtCollegeListing = async (): Promise<ArtCollegeListing> => {
     page: pageMeta,
     rootEntries,
     sections,
+  };
+};
+
+export const getArtCollegeSection = async (
+  slugSegments: string[],
+): Promise<ArtCollegeSection | null> => {
+  if (slugSegments.length === 0) return null;
+  const directoryPath = path.join(ART_COLLEGE_DIR, ...slugSegments);
+  if (!(await pathExists(directoryPath))) return null;
+
+  try {
+    const stat = await fs.stat(directoryPath);
+    if (!stat.isDirectory()) return null;
+  } catch {
+    return null;
+  }
+
+  const dirents = await safeReadDir(directoryPath);
+  let meta: FrontMatter | undefined;
+  const entries: ArtCollegeEntry[] = [];
+
+  for (const dirent of dirents) {
+    if (dirent.isDirectory()) {
+      const childSlug = dirent.name;
+      const relativeIndexPath = path.join(...slugSegments, childSlug, "index.mdx");
+      const absoluteIndexPath = path.join(ART_COLLEGE_DIR, relativeIndexPath);
+
+      if (await pathExists(absoluteIndexPath)) {
+        entries.push(
+          await buildEntry([...slugSegments, childSlug], {
+            relativeFilePath: relativeIndexPath,
+          }),
+        );
+      } else {
+        entries.push(createEntry([...slugSegments, childSlug]));
+      }
+
+      continue;
+    }
+
+    if (!dirent.isFile() || !mdxExtension.test(dirent.name)) {
+      continue;
+    }
+
+    if (dirent.name === "index.mdx") {
+      const { frontMatter } = await parseMdx(path.join(directoryPath, dirent.name));
+      meta = frontMatter;
+      continue;
+    }
+
+    const fileSlug = dirent.name.replace(mdxExtension, "");
+    entries.push(await buildEntry([...slugSegments, fileSlug]));
+  }
+
+  sortEntries(entries);
+
+  return {
+    slug: slugSegments.join("/"),
+    title: meta?.title ?? toTitleCase(slugSegments.at(-1) ?? "Section"),
+    description: meta?.description,
+    intro: meta?.intro,
+    entries,
+    order: meta?.order,
   };
 };
 

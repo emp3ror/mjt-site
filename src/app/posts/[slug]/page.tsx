@@ -1,24 +1,21 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { HikeMap } from "@/components/maps/hike-map";
-import type { HikeCheckpointInput } from "@/components/maps/hike-map";
 import { cache } from "react";
-
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 
-import { allPosts } from "contentlayer/generated";
-import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
 import { ContentActions } from "@/components/actions/content-actions";
+import { LongformEntry } from "@/components/longform-entry";
+import { HikeMap } from "@/components/maps/hike-map";
+import type { HikeCheckpointInput } from "@/components/maps/hike-map";
+import { MdxContainer, mdxComponents } from "@/components/mdx/mdx";
+import { formatDate } from "@/lib/format";
+import { allPosts } from "@/content";
 
-const posts = [...allPosts].sort((a, b) =>
-  new Date(b.date).getTime() - new Date(a.date).getTime(),
-);
+const posts = [...allPosts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-const getPostFromParams = (slug: string) =>
-  posts.find((post) => post.slug === slug);
+const getPostFromParams = (slug: string) => posts.find((post) => post.slug === slug);
 
 type PostPageProps = {
   params: Promise<{
@@ -32,10 +29,7 @@ const renderMdx = cache(async (source: string) => {
     options: {
       mdxOptions: {
         remarkPlugins: [],
-        rehypePlugins: [
-          rehypeSlug,
-          [rehypeAutolinkHeadings, { behavior: "wrap" }],
-        ],
+        rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]],
       },
     },
     components: mdxComponents,
@@ -44,14 +38,11 @@ const renderMdx = cache(async (source: string) => {
   return content;
 });
 
-export const generateStaticParams = async () =>
-  posts.map((post) => ({ slug: post.slug }));
+export const generateStaticParams = async () => posts.map((post) => ({ slug: post.slug }));
 
 export const dynamicParams = false;
 
-export async function generateMetadata({
-  params,
-}: PostPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = getPostFromParams(slug);
 
@@ -72,13 +63,6 @@ export async function generateMetadata({
   } satisfies Metadata;
 }
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "long",
-    day: "2-digit",
-  }).format(new Date(value));
-
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   const post = getPostFromParams(slug);
@@ -91,50 +75,37 @@ export default async function PostPage({ params }: PostPageProps) {
   const showHikeMap = post.template === "hike" && Boolean(post.gpx);
 
   return (
-    <article className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 pb-24 pt-16">
-      <nav className="text-sm text-neutral-500">
-        <Link className="hover:text-blue-600" href="/posts">
-          ← Back to all notes
-        </Link>
-      </nav>
-
-      <header className="mt-8 space-y-4">
-        <span className="text-xs uppercase tracking-[0.25em] text-neutral-400">
-          {post.category}
-        </span>
-        <h1 className="text-4xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-          {post.title}
-        </h1>
-        <p className="text-base text-neutral-600 dark:text-neutral-300">
-          {post.description}
-        </p>
-        <div className="flex items-center gap-4 text-sm text-neutral-400">
-          <span>{formatDate(post.date)}</span>
-          <span aria-hidden>•</span>
-          <span>{post.readingTime}</span>
-        </div>
-      </header>
-
-      <ContentActions
-        itemId={post._id}
-        title={post.title}
-        description={post.description}
-        url={post.url}
-        likeStorageKey="mjt-liked-items"
-        className="mt-6"
-        header={
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">
-              Share this article
-            </p>
-            <p className="mt-1 text-sm text-[color:var(--ink)]/70">
-              Spread the word or leave a quick like to keep this thread in your personal rotation.
-            </p>
-          </div>
-        }
-      />
-
-      <section className="mt-12 space-y-6">
+    <LongformEntry
+      className="longform-note"
+      backHref="/posts"
+      backLabel="Back to notes"
+      eyebrow="Entry"
+      title={post.title}
+      description={post.description}
+      meta={[
+        { label: "Date", value: formatDate(post.date, "long") },
+        { label: "Kind", value: post.category },
+        { label: "Reading", value: post.readingTime },
+      ]}
+      actions={
+        <ContentActions
+          itemId={post._id}
+          title={post.title}
+          description={post.description}
+          url={post.url}
+          likeStorageKey="mjt-liked-items"
+          header={
+            <div>
+              <p className="eyebrow">Share</p>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--ink-soft)]">
+                Save or pass this note along.
+              </p>
+            </div>
+          }
+        />
+      }
+    >
+      <div className="space-y-8">
         {showHikeMap && post.gpx ? (
           <HikeMap
             gpxPath={post.gpx}
@@ -142,7 +113,7 @@ export default async function PostPage({ params }: PostPageProps) {
           />
         ) : null}
         <MdxContainer>{content}</MdxContainer>
-      </section>
-    </article>
+      </div>
+    </LongformEntry>
   );
 }

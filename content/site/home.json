@@ -1,0 +1,48 @@
+{
+  "volunteering": {
+    "eyebrow": "Volunteering",
+    "title": "Community work told at full width.",
+    "description": "The loudest parts of this site are reserved for collective effort: workshops, assemblies, and small acts of care that deserve more than a thumbnail.",
+    "callToActionLabel": "Read the full story",
+    "fallbackLocation": "Kathmandu Valley",
+    "supportingPostTags": ["community", "civic-tech"],
+    "maxSlides": 4,
+    "fallbackImages": {
+      "primary": "/art.png",
+      "secondary": "/art.png"
+    }
+  },
+  "journal": {
+    "eyebrow": "Journal",
+    "title": "Quiet entries, held open by typography and space.",
+    "description": "Reflections stay closer to the page: slower, lighter, and easier to read in one sitting.",
+    "maxEntries": 4,
+    "excerptLength": 220
+  },
+  "stories": {
+    "eyebrow": "Stories & Experiments",
+    "title": "A looser space for making, testing, and wandering.",
+    "description": "Code, studio practice, and movement are allowed to collide here. The layout opens up, shifts weight, and lets different mediums speak at different volumes.",
+    "studioStatement": {
+      "eyebrow": "Studio statement",
+      "title": "I treat websites like edited sequences, not stacks of panels.",
+      "description": "The same attention goes into interface systems, sketchbook pages, running routes, and community gatherings: pacing, contrast, and where to leave silence so the next idea can land clearly."
+    },
+    "focusAreas": {
+      "eyebrow": "Focus areas",
+      "title": "Four threads, one practice.",
+      "items": [
+        "Developer crafting durable and expressive digital systems.",
+        "Artist collecting texture, memory, and patient observation.",
+        "Runner using motion as a way to reorder thought.",
+        "Organizer shaping spaces where people can listen and act together."
+      ]
+    },
+    "fallbackImages": {
+      "tech": "/art.png",
+      "art": "/art.png",
+      "hike": "/art.png"
+    },
+    "categoriesToFeature": ["tech", "art", "hike"]
+  }
+}

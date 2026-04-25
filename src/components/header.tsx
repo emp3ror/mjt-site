@@ -1,76 +1,96 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+/**
+ * Sticky primary navigation. Highlights the active route based on the URL.
+ * Navigation links live in `content/site/navigation.json`.
+ *
+ * The inline list is hidden on small viewports; a hamburger drawer
+ * (`MobileNav`) takes over there.
+ */
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
+import navigation from "@content/site/navigation.json";
+import { cn } from "@/lib/cn";
+import { MobileNav } from "@/components/mobile-nav";
 
-const navigation = [
-  { label: "About Me", href: "#about" },
-  { label: "Projects", href: "#works" },
-  { label: "Experience", href: "#experience" },
-  { label: "Today I Learned", href: "#today-i-learned" },
-  { label: "Journel", href: "/posts" },
-  { label: "Community Contribution", href: "#community-contribution" },
-  { label: "Work with Me", href: "#contact" },
-];
+const isActive = (href: string, pathname: string | null) => {
+  if (!pathname) return false;
+  if (href === "/") return pathname === "/";
+  if (href.startsWith("/#")) return false;
+  return pathname === href || pathname.startsWith(`${href}/`);
+};
 
 export function Header() {
-  const [open, setOpen] = useState(false);
-
-  const toggle = () => setOpen((previous) => !previous);
-  const close = () => setOpen(false);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[color:var(--surface)]/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link
-          href="/"
-          className="relative flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-[color:var(--ink)] shadow-[0_10px_30px_rgba(44,45,94,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(44,45,94,0.12)]"
-        >
-          MJT Studio
+    <header
+      className={cn(
+        "h-[var(--header-height)]",
+        isHome
+          ? "fixed inset-x-0 top-0 z-50 bg-transparent"
+          : "sticky top-0 z-40 border-b border-[color:var(--line-strong)]/65 bg-[color:var(--surface)]/94 backdrop-blur-xl",
+      )}
+    >
+      <div className="page-wrap flex h-full items-center justify-between gap-6">
+        <Link href="/" className="min-w-0">
+          <span
+            className={cn(
+              "text-[0.68rem] font-medium uppercase tracking-[0.34em]",
+              isHome ? "text-white/85" : "text-[color:var(--muted)]",
+            )}
+          >
+            MJT
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="group relative text-sm font-medium text-[color:var(--ink)]/80 transition hover:text-[color:var(--ink)]"
-            >
-              {item.label}
-              <span className="absolute inset-x-0 -bottom-1 h-1 scale-x-0 rounded-full bg-[color:var(--accent)]/70 transition group-hover:scale-x-100" />
-            </Link>
-          ))}
+        <nav aria-label="Primary" className="hidden overflow-x-auto sm:block">
+          <ul
+            className={cn(
+              "flex items-center gap-4 whitespace-nowrap text-[0.96rem] md:gap-6",
+              isHome ? "text-white/80" : "text-[color:var(--ink-soft)]",
+            )}
+          >
+            {navigation.primary.map((item) => {
+              const active = isActive(item.href, pathname);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "relative pb-1.5 font-medium",
+                      isHome
+                        ? "hover:text-white"
+                        : "hover:text-[color:var(--foreground)]",
+                      active &&
+                        (isHome ? "text-white" : "text-[color:var(--foreground)]"),
+                    )}
+                  >
+                    {item.label}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute inset-x-0 -bottom-px h-px transition-opacity",
+                        isHome ? "bg-white" : "bg-[color:var(--accent)]",
+                        active ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--muted)]/60 text-[color:var(--ink)] md:hidden"
-          onClick={toggle}
-          aria-label={open ? "Close menu" : "Open menu"}
-        >
-          {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
-        </button>
+        <MobileNav
+          items={navigation.primary}
+          socials={navigation.socials}
+          appearance={isHome ? "light" : "default"}
+        />
       </div>
-
-      {open ? (
-        <div className="md:hidden px-4">
-          <nav className="mb-4 space-y-2 rounded-3xl border border-[color:var(--muted)]/60 bg-white/95 p-6 shadow-[0_24px_60px_rgba(44,45,94,0.18)] transition-all duration-300 ease-out">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center justify-between rounded-2xl bg-[color:var(--background)] px-4 py-3 text-sm font-medium text-[color:var(--ink)] shadow-sm transition hover:bg-white"
-                onClick={close}
-              >
-                {item.label}
-                <span aria-hidden>{">"}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
-      ) : null}
     </header>
   );
 }

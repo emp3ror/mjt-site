@@ -1,87 +1,108 @@
 "use client";
 
+/**
+ * Secondary navigation strip directly under the global header.
+ *
+ * - On the home route it renders a row of in-page anchor links so users can
+ *   quickly jump between hero sections.
+ * - On any other route it renders a breadcrumb trail. Segment labels are
+ *   looked up in `content/site/navigation.json`; unknown segments fall back
+ *   to a title-cased version of the slug.
+ */
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
-type Breadcrumb = {
-  label: string;
-  href?: string;
-};
+import navigation from "@content/site/navigation.json";
 
-const segmentLabelMap: Record<string, string> = {
-  posts: "Notes",
-  tags: "Tags",
-  "art-college": "Art College",
-  events: "Events",
-};
+type Crumb = { label: string; href?: string };
 
-const formatSegmentLabel = (value: string) =>
+const segmentLabels = navigation.breadcrumbLabels as Record<string, string>;
+const homeAnchors = (navigation as { homeAnchors?: Array<{ label: string; href: string }> })
+  .homeAnchors ?? [];
+
+const titleCase = (value: string) =>
   value
     .split(/[-_]/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+const buildCrumbs = (pathname: string | null): Crumb[] => {
+  if (!pathname || pathname === "/") return [];
+
+  const segments = pathname.split("/").filter(Boolean);
+
+  return [
+    { label: "Archive", href: "/" },
+    ...segments.map((segment, index): Crumb => {
+      const isLast = index === segments.length - 1;
+      const isTagLeaf = segments[0] === "tags" && isLast;
+      const label = isTagLeaf
+        ? `#${titleCase(segment)}`
+        : segmentLabels[segment] ?? titleCase(segment);
+
+      return {
+        label,
+        href: isLast ? undefined : `/${segments.slice(0, index + 1).join("/")}`,
+      };
+    }),
+  ];
+};
+
 export function SubpageNavigation() {
   const pathname = usePathname();
+  const crumbs = useMemo(() => buildCrumbs(pathname), [pathname]);
 
-  const breadcrumbs = useMemo<Breadcrumb[]>(() => {
-    if (!pathname || pathname === "/") {
-      return [];
-    }
-
-    const segments = pathname.split("/").filter(Boolean);
-
-    if (segments.length === 0) {
-      return [];
-    }
-
-    return [
-      { label: "Home", href: "/" },
-      ...segments.map((segment, index) => {
-        const isLast = index === segments.length - 1;
-        const path = `/${segments.slice(0, index + 1).join("/")}`;
-
-        const label =
-          segments[0] === "tags" && isLast
-            ? `#${formatSegmentLabel(segment)}`
-            : segmentLabelMap[segment] ?? formatSegmentLabel(segment);
-
-        return {
-          label,
-          href: isLast ? undefined : path,
-        };
-      }),
-    ];
-  }, [pathname]);
-
-  if (breadcrumbs.length === 0) {
-    return null;
+  if (pathname === "/") {
+    if (homeAnchors.length === 0) return null;
+    return (
+      <nav
+        aria-label="On this page"
+        className="absolute inset-x-0 top-[var(--header-height)] z-40 bg-transparent"
+      >
+        <div className="page-wrap flex items-center gap-3 py-3.5 text-[0.69rem] uppercase tracking-[0.3em] text-white/70">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full border border-white/45" />
+          <ol className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            {homeAnchors.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="transition-colors hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </nav>
+    );
   }
 
-  return (
-    <nav className="border-b border-neutral-200/70 bg-white dark:border-neutral-800/50 dark:bg-neutral-950">
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-6 py-4 text-xs uppercase tracking-[0.3em] text-neutral-500 dark:text-neutral-400">
-        <ol className="flex flex-wrap items-center gap-2">
-          {breadcrumbs.map((item, index) => {
-            const isLast = index === breadcrumbs.length - 1;
+  if (crumbs.length === 0) return null;
 
+  return (
+    <nav
+      aria-label="Location"
+      className="border-b border-[color:var(--line)]/70 bg-[color:var(--surface)]/72"
+    >
+      <div className="page-wrap flex items-center gap-3 py-3.5 text-[0.69rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full border border-[color:var(--accent)]/50" />
+        <ol className="flex flex-wrap items-center gap-2">
+          {crumbs.map((item, index) => {
+            const isLast = index === crumbs.length - 1;
             return (
-              <li key={item.label} className="flex items-center gap-2">
+              <li key={`${item.label}-${index}`} className="flex items-center gap-2">
                 {item.href && !isLast ? (
-                  <Link
-                    href={item.href}
-                    className="transition hover:text-neutral-800 dark:hover:text-neutral-100"
-                  >
+                  <Link href={item.href} className="hover:text-[color:var(--foreground)]/92">
                     {item.label}
                   </Link>
                 ) : (
-                  <span className="text-neutral-800 dark:text-neutral-100">
-                    {item.label}
-                  </span>
+                  <span className="text-[color:var(--foreground)]/94">{item.label}</span>
                 )}
-                {isLast ? null : <span aria-hidden className="text-neutral-300 dark:text-neutral-600">/</span>}
+                {!isLast && <span aria-hidden className="text-[color:var(--line-strong)]">/</span>}
               </li>
             );
           })}

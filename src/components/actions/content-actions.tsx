@@ -1,15 +1,21 @@
 "use client";
 
+/**
+ * Reusable action panel attached to long-form entries: native share +
+ * platform share links, copy-link, optional like/bookmark toggles backed
+ * by `localStorage`, and an optional calendar dropdown for events.
+ */
+
 import {
   Bookmark,
   BookmarkCheck,
   CalendarPlus,
   ChevronDown,
-  Facebook,
   Link2,
+  MessageCircle,
+  Send,
   Share2,
   ThumbsUp,
-  Twitter,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -53,7 +59,7 @@ type ContentActionsProps = {
 type CopyState = "idle" | "copied" | "error";
 
 const iconButtonClass =
-  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--muted)]/50 bg-white/80 text-[color:var(--ink)]/70 transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]";
+  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--line)] text-[color:var(--ink-soft)] transition hover:border-[color:var(--line-strong)] hover:text-[color:var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]";
 
 export function ContentActions({
   itemId,
@@ -66,7 +72,7 @@ export function ContentActions({
   className,
   header,
 }: ContentActionsProps) {
-  const [origin, setOrigin] = useState<string | null>(null);
+  const origin = typeof window === "undefined" ? null : window.location.origin;
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>("idle");
@@ -77,13 +83,6 @@ export function ContentActions({
   const calendarMenuId = hasCalendar ? `content-actions-calendar-${itemId}` : undefined;
   const triggerLabel = calendar?.triggerLabel ?? "Add to calendar";
   const TriggerIcon = calendar?.triggerIcon ?? CalendarPlus;
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    setOrigin(window.location.origin);
-  }, []);
 
   useEffect(() => {
     if (!likeStorageKey || typeof window === "undefined") {
@@ -283,7 +282,7 @@ export function ContentActions({
   return (
     <section
       className={cn(
-        "space-y-4 rounded-3xl bg-white/80 p-6 shadow-[0_18px_45px_rgba(44,45,94,0.14)]",
+        "space-y-4 border-t border-[color:var(--line)] pt-5",
         className,
       )}
     >
@@ -291,11 +290,11 @@ export function ContentActions({
 
       <div
         className={cn(
-          "flex flex-col gap-3 sm:flex-row sm:items-center",
-          hasCalendar ? "sm:justify-between" : "",
+          "flex flex-wrap items-center gap-3",
+          hasCalendar ? "justify-between" : "",
         )}
       >
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Share actions">
           <button
             type="button"
             className={iconButtonClass}
@@ -309,7 +308,7 @@ export function ContentActions({
           <a
             className={cn(
               iconButtonClass,
-              "border-[#1877F2]/40 bg-[#1877F2]/10 text-[#1459b6] hover:bg-[#1877F2]/20",
+              "hover:border-[color:var(--line-strong)]",
             )}
             href={facebookLink}
             target="_blank"
@@ -317,13 +316,13 @@ export function ContentActions({
             title="Share on Facebook"
             aria-label="Share on Facebook"
           >
-            <Facebook className="h-4 w-4" aria-hidden />
+            <MessageCircle className="h-4 w-4" aria-hidden />
           </a>
 
           <a
             className={cn(
               iconButtonClass,
-              "border-[#0F1419]/30 bg-[#0F1419]/5 text-[#0F1419]/80 hover:bg-[#0F1419]/10",
+              "hover:border-[color:var(--line-strong)]",
             )}
             href={twitterLink}
             target="_blank"
@@ -331,7 +330,7 @@ export function ContentActions({
             title="Share on X"
             aria-label="Share on X"
           >
-            <Twitter className="h-4 w-4" aria-hidden />
+            <Send className="h-4 w-4" aria-hidden />
           </a>
 
           {bookmark ? (
@@ -339,7 +338,7 @@ export function ContentActions({
               type="button"
               className={cn(
                 iconButtonClass,
-                bookmarked ? "border-[color:var(--accent)]/60 bg-[color:var(--accent)]/10 text-[color:var(--accent)]" : undefined,
+                bookmarked ? "border-[color:var(--accent)]/40 text-[color:var(--accent-strong)]" : undefined,
               )}
               onClick={toggleBookmark}
               aria-label={bookmarked ? "Remove bookmark" : "Bookmark item"}
@@ -355,7 +354,7 @@ export function ContentActions({
               type="button"
               className={cn(
                 iconButtonClass,
-                liked ? "border-[color:var(--accent)]/60 bg-[color:var(--accent)]/10 text-[color:var(--accent)]" : undefined,
+                liked ? "border-[color:var(--accent)]/40 text-[color:var(--accent-strong)]" : undefined,
               )}
               onClick={toggleLike}
               aria-label={liked ? "Remove like" : "Like item"}
@@ -370,8 +369,8 @@ export function ContentActions({
             type="button"
             className={cn(
               iconButtonClass,
-              copyState === "copied" ? "border-[color:var(--accent)]/60 bg-[color:var(--accent)]/10" : undefined,
-              copyState === "error" ? "border-red-200 bg-red-50 text-red-600" : undefined,
+              copyState === "copied" ? "border-[color:var(--accent)]/40 text-[color:var(--accent-strong)]" : undefined,
+              copyState === "error" ? "border-[color:var(--accent-alt)]/40 text-[color:var(--accent-alt)]" : undefined,
             )}
             onClick={handleCopy}
             title={copyButtonLabel}
@@ -385,7 +384,7 @@ export function ContentActions({
           <div ref={calendarMenuRef} className="relative">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/40 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--accent)] transition hover:-translate-y-0.5 hover:bg-[color:var(--accent)]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-strong)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
               onClick={toggleCalendarMenu}
               aria-expanded={calendarOpen}
               aria-haspopup="menu"
@@ -400,14 +399,14 @@ export function ContentActions({
               <div
                 id={calendarMenuId}
                 role="menu"
-                className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-[color:var(--muted)]/60 bg-white/95 p-2 shadow-[0_12px_35px_rgba(44,45,94,0.16)] backdrop-blur"
+                className="absolute right-0 z-20 mt-2 w-56 rounded-[1rem] border border-[color:var(--line)] bg-[color:var(--base)] p-2"
               >
                 {calendar?.options.map((option) => {
                   const OptionIcon = option.icon;
                   return (
                     <a
                       key={option.id}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[color:var(--ink)]/80 transition hover:bg-[color:var(--accent)]/10 hover:text-[color:var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[color:var(--ink-soft)] transition hover:bg-black/0 hover:text-[color:var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
                       href={option.href}
                       target={option.target}
                       rel={option.rel}

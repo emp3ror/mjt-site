@@ -1,34 +1,85 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-- `src/app` App Router entry (`layout.tsx`, `page.tsx`) and routes for `posts`, `events`, `art-college`, `tags`, plus `api/contact/route.ts`.
-- `src/components` shared UI (header/footer, home sections, action components); `src/lib` helpers; `src/data` small config/constants.
-- Markdown/MDX content lives in `content/{posts,events,art-college}` and is wired through `contentlayer.config.ts`.
-- Static assets sit in `public/`; generated static exports land in `out/` (avoid manual edits); extra references live in `docs/`.
+## Purpose
+This file tells coding agents how to work safely and consistently in this repository.
 
-## Build, Test, and Development Commands
-- `npm run dev` — start the dev server on :3000 (fast refresh).
-- `npm run build` — run Contentlayer then Next.js production build.
-- `npm run start` — serve the production build locally.
-- `npm run lint` — ESLint via `eslint.config.mjs`; `npm run typecheck` — TypeScript without emitting files.
-- Prefer `npm run build`; use `npm run export` only when CI needs the static `out/` output.
+The project is a Next.js 16 App Router site for a personal archive (`posts`, `events`, `art-college`, `shop`, `traces`) with MDX-first content.
 
-## Coding Style & Naming Conventions
-- TypeScript + React 19 + Next.js 15; favor functional components. Add `"use client";` only where client hooks or browser APIs are used.
-- Utility-first styling with Tailwind classes; keep className ordering stable and reuse tokens from `globals.css`.
-- Two-space indentation; PascalCase components; camelCase variables/functions; kebab-case filenames for content entries.
-- Fix ESLint warnings and keep prop/state types explicit when inference is unclear.
+## Architecture Snapshot
+- Framework: Next.js 16 + React 19 + TypeScript.
+- Styling: Tailwind CSS v4 + design tokens in `src/app/globals.css`.
+- Content source:
+  - MDX entries live under `content/{posts,events,art-college,shop}`.
+  - Site-wide editorial copy + nav config lives under `content/site/*.json`.
+  - Read at build time by `src/content/index.ts`, which exposes typed arrays
+    (`allPosts`, `allEvents`, `allShopItems`, plus the per-section overviews).
+  - `tsconfig.json` exposes the `@content/*` alias for `content/*` and `@/*`
+    for `src/*`. There is no Contentlayer step.
+- Layout shell lives in `src/app/layout.tsx` with `Header`, `SubpageNavigation`, `PageSurface`, and `Footer`.
+- MDX rendering is compiled in route pages using `compileMDX` and shared render components from `src/components/mdx/mdx.tsx`.
 
-## Testing Guidelines
-- No automated tests are committed yet; always run `npm run lint` and `npm run typecheck` before pushing.
-- If you add coverage, colocate UI tests as `*.test.tsx` alongside components or under `src/__tests__/` and prefer React Testing Library-style assertions.
-- Manually verify navigation, posts/events rendering, and the contact form with valid reCAPTCHA + notification targets.
+## Important Paths
+- App routes: `src/app/**`
+- Shared components: `src/components/**`
+- Utility libraries: `src/lib/**`
+- Content (MDX entries + site JSON): `content/**`
+- Content registry: `src/content/index.ts`
+- Public assets: `public/**`
+- Docs/reference notes: `docs/**`
 
-## Commit & Pull Request Guidelines
-- Follow the existing style of concise, imperative commit subjects (e.g., “fixes”, “share tab and responsive contact”); keep them under ~60 characters.
-- PRs should describe the change set, link any issues/tasks, note schema or env var updates, and include UI screenshots/GIFs when layouts or styles change.
-- List the commands/tests you ran (`lint`, `typecheck`, `build`) in the PR description.
+## Commands
+- `npm run dev` - start local dev server.
+- `npm run build` - production build (primary verification command).
+- `npm run start` - run production server.
+- `npm run lint` - ESLint checks.
+- `npm run typecheck` - TypeScript checks without emit.
+- `npm run export` - alias of build in this repo; prefer `build` unless static export flow is explicitly required.
 
-## Security & Configuration Tips
-- Store secrets only in `.env.local` (reCAPTCHA keys and notification webhooks for Slack/Discord/Telegram/WhatsApp); never commit them.
-- After editing content, rerun `npm run build` to refresh Contentlayer output. Exclude `node_modules`, `.env*`, and `out/` from commits.
+## Working Rules For Agents
+- Keep changes focused; avoid broad refactors unless requested.
+- Do not revert or overwrite unrelated dirty working tree changes.
+- Prefer server components by default; add `"use client"` only when hooks/browser APIs are required.
+- Reuse existing primitives before creating new components.
+- Keep Tailwind class patterns consistent with nearby code and global tokens.
+- Preserve content schema expectations (frontmatter keys used by route loaders).
+
+## MDX + Content Rules
+- When adding new entries:
+  - Posts: `content/posts/<slug>.mdx`
+  - Events: `content/events/<slug>.mdx`
+  - Shop: `content/shop/<slug>.mdx`
+  - Art college: file or nested `index.mdx` under `content/art-college/**`
+- Ensure required frontmatter fields are present for each type (`title`, `description`, date fields, etc. as used by loaders/pages).
+- Do not introduce breaking schema changes in MDX frontmatter without updating `src/content/index.ts` and its consumers.
+- Site-level editorial copy (hero, contact, navigation, home sections) lives
+  in `content/site/*.json`. Prefer editing these files over hard-coding copy
+  inside components.
+
+## Route Conventions
+- List pages read from generated content arrays.
+- Detail pages use static params and currently run with `dynamicParams = false` where configured.
+- Use existing longform wrappers/components (`LongformEntry`, `MdxContainer`, action panels) for consistency.
+
+## Contact API Safety
+- Contact endpoint: `src/app/api/contact/route.ts`.
+- Validate payloads with Zod; keep explicit error responses.
+- reCAPTCHA validation is optional based on env presence; do not hard-require it in code paths that currently allow missing secret.
+- Notification channels are configured via environment variables; never hardcode secrets.
+
+## Quality Checks Before Handoff
+Run, at minimum:
+1. `npm run lint`
+2. `npm run typecheck`
+3. `npm run build` (recommended for route/content changes)
+
+If you cannot run commands, explicitly state that in your handoff.
+
+## Commit/PR Guidance
+- Commit messages should be short, imperative, and specific.
+- Keep PRs small and reviewable when possible.
+- Mention any env var changes, content schema changes, and manual verification steps.
+
+## Security
+- Never commit `.env*` or credentials.
+- Treat webhook URLs, tokens, and IDs as secrets.
+- Avoid adding large generated artifacts unless explicitly requested.

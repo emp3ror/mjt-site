@@ -1,3 +1,8 @@
+/**
+ * Decorative SVG divider used between sections on the shop pages.
+ * Three variants (`cloud`, `lotus`, `line`) — pick whichever matches the mood.
+ */
+
 import type { ReactElement } from "react";
 
 import { cn } from "@/lib/cn";

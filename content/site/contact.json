@@ -1,0 +1,23 @@
+{
+  "heading": {
+    "eyebrow": "Contact",
+    "title": "Let us build something friendly",
+    "description": "Tell me about your next launch, illustration brief, or art residency."
+  },
+  "form": {
+    "fields": {
+      "name": { "label": "Name" },
+      "email": { "label": "Email" },
+      "message": { "label": "Message" }
+    },
+    "submit": { "label": "Send message" },
+    "recaptchaNotConfigured": "reCAPTCHA is not configured. Provide a site key to enable spam protection.",
+    "responseTimeNotice": "You will receive a copy of your message. Responses arrive within two business days."
+  },
+  "socialLinks": [
+    { "id": "email", "label": "Email", "href": "mailto:hello@mjt.studio", "icon": "mail" },
+    { "id": "behance", "label": "Behance", "href": "https://www.behance.net", "icon": "palette" },
+    { "id": "linkedin", "label": "LinkedIn", "href": "https://www.linkedin.com", "icon": "linkedin" },
+    { "id": "instagram", "label": "Instagram", "href": "https://www.instagram.com", "icon": "instagram" }
+  ]
+}

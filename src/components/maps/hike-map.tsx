@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Interactive GPX visualisation: parses the track XML in the browser, draws
+ * the route on a Leaflet map, and a Chart.js elevation profile linked to
+ * waypoints/checkpoints. Both Leaflet and Chart.js are loaded lazily from
+ * a CDN so the bundle stays light.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -966,7 +973,7 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
 
           const wrapper = document.createElement("div");
           wrapper.className =
-            "absolute flex cursor-pointer flex-col items-center gap-2 text-[color:var(--ink)]";
+            "absolute flex cursor-pointer flex-col items-center gap-2 text-[color:var(--foreground)]";
           wrapper.style.left = `${markerX}px`;
           wrapper.style.top = `${Math.max(chartTop - 120, 0)}px`;
           wrapper.style.transform = "translateX(calc(-50% + 10px))";
@@ -1125,14 +1132,14 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-[color:var(--ink)]">Hike route</h2>
-          <p className="text-sm text-[color:var(--ink)]/70">
+          <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Hike route</h2>
+          <p className="text-sm text-[color:var(--foreground)]/70">
             Interactive GPX map with checkpoints and elevation profile.
           </p>
         </div>
         <a
           href={gpxPath}
-          className="inline-flex items-center gap-2 rounded-full border border-[color:var(--muted)]/50 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--ink)] transition hover:-translate-y-1 hover:bg-white"
+          className="inline-flex items-center gap-2 rounded-full border border-[color:var(--muted)]/50 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--foreground)] transition hover:-translate-y-1 hover:bg-white"
           download
         >
           Download GPX
@@ -1140,22 +1147,22 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
       </div>
 
       {stats ? (
-        <div className="grid gap-4 text-sm text-[color:var(--ink)]/70 sm:grid-cols-3">
+        <div className="grid gap-4 text-sm text-[color:var(--foreground)]/70 sm:grid-cols-3">
           <div>
             <p className="uppercase tracking-[0.25em] text-[color:var(--muted)]">Distance</p>
-            <p className="text-lg font-semibold text-[color:var(--ink)]">
+            <p className="text-lg font-semibold text-[color:var(--foreground)]">
               {stats.distanceKm.toFixed(2)} km
             </p>
           </div>
           <div>
             <p className="uppercase tracking-[0.25em] text-[color:var(--muted)]">Ascent</p>
-            <p className="text-lg font-semibold text-[color:var(--ink)]">
+            <p className="text-lg font-semibold text-[color:var(--foreground)]">
               {stats.ascent !== null ? `${Math.round(stats.ascent)} m` : "--"}
             </p>
           </div>
           <div>
             <p className="uppercase tracking-[0.25em] text-[color:var(--muted)]">Descent</p>
-            <p className="text-lg font-semibold text-[color:var(--ink)]">
+            <p className="text-lg font-semibold text-[color:var(--foreground)]">
               {stats.descent !== null ? `${Math.round(stats.descent)} m` : "--"}
             </p>
           </div>
@@ -1168,21 +1175,21 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
       />
 
       {loading ? (
-        <p className="text-sm text-[color:var(--ink)]/60">Loading hike route...</p>
+        <p className="text-sm text-[color:var(--foreground)]/60">Loading hike route...</p>
       ) : null}
 
       {track?.points.length ? (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--ink)]/60">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-[color:var(--foreground)]/60">
                 Elevation profile
               </h3>
-              <p className="text-xs text-[color:var(--ink)]/50">
+              <p className="text-xs text-[color:var(--foreground)]/50">
                 Hover the chart to preview checkpoints on the map.
               </p>
             </div>
-            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--ink)]/50">
+            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--foreground)]/50">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-[color:var(--muted)]/60"
@@ -1200,10 +1207,10 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
       ) : null}
 
       {selectedCoords ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--muted)]/60 bg-white/80 px-4 py-3 text-sm text-[color:var(--ink)]/70">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--muted)]/60 bg-white/80 px-4 py-3 text-sm text-[color:var(--foreground)]/70">
           <div className="flex flex-col">
             <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">Coordinates</span>
-            <code className="text-base font-semibold text-[color:var(--ink)]">{selectedCoords}</code>
+            <code className="text-base font-semibold text-[color:var(--foreground)]">{selectedCoords}</code>
           </div>
           <button
             type="button"
