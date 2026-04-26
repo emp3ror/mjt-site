@@ -6,7 +6,7 @@
  */
 
 import { CalendarDays, CalendarPlus, Download } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ContentActions } from "@/components/actions/content-actions";
 import { buildGoogleCalendarLink, buildIcsDataUri, buildMicrosoftCalendarLink } from "@/lib/calendar";
@@ -30,7 +30,11 @@ const BOOKMARK_KEY = "mjt-bookmarked-events";
 const LIKE_KEY = "mjt-liked-events";
 
 export function EventActions({ event }: EventActionsProps) {
-  const origin = typeof window === "undefined" ? null : window.location.origin;
+  const [origin, setOrigin] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   const eventUrl = useMemo(() => {
     if (!origin) {

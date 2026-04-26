@@ -72,7 +72,7 @@ export function ContentActions({
   className,
   header,
 }: ContentActionsProps) {
-  const origin = typeof window === "undefined" ? null : window.location.origin;
+  const [origin, setOrigin] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>("idle");
@@ -83,6 +83,10 @@ export function ContentActions({
   const calendarMenuId = hasCalendar ? `content-actions-calendar-${itemId}` : undefined;
   const triggerLabel = calendar?.triggerLabel ?? "Add to calendar";
   const TriggerIcon = calendar?.triggerIcon ?? CalendarPlus;
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     if (!likeStorageKey || typeof window === "undefined") {

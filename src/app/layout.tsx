@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${newsreader.variable} ${interTight.variable} site-shell antialiased`}>
         <a href="#main" className="skip-link">
           Skip to content

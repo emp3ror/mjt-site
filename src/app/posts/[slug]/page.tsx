@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 
@@ -28,7 +29,7 @@ const renderMdx = cache(async (source: string) => {
     source,
     options: {
       mdxOptions: {
-        remarkPlugins: [],
+        remarkPlugins: [remarkGfm],
         rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]],
       },
     },
@@ -72,7 +73,7 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const content = await renderMdx(post.body.raw);
-  const showHikeMap = post.template === "hike" && Boolean(post.gpx);
+  const showHikeMap = Boolean(post.gpx);
 
   return (
     <LongformEntry

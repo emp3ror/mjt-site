@@ -47,8 +47,10 @@ export function HomeHero() {
 
             <div className="hero-headline section-heading-stack">
               <h1 className="hero-name">
-                <span className="hero-name__given">{homeHero.name.first}</span>
-                <span className="hero-name__family">{homeHero.name.last}</span>
+                <span className="hero-name__line">
+                  <span className="hero-name__given">{homeHero.name.first}</span>
+                  <span className="hero-name__family">{homeHero.name.last}</span>
+                </span>
                 <span className="hero-name__rule" aria-hidden />
               </h1>
               <p className="hero-craft max-w-[34ch] text-xl leading-9 text-white/86 md:text-[1.38rem] md:leading-10">
