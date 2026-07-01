@@ -1,5 +1,6 @@
 import { allEvents, allPosts, type Event, type Post } from "@/content";
 import { getArtCollegeListing, type ArtCollegeEntry } from "@/lib/art-college";
+import { getSelfStudyListing, type SelfStudyEntry } from "@/lib/self-study";
 import { formatEventDateRange } from "@/lib/events";
 import { formatDate } from "@/lib/format";
 
@@ -90,17 +91,42 @@ const studyToTrace = (entry: ArtCollegeEntry): Trace => ({
   sortDate: entry.updated ?? entry.date ?? fallbackDate,
 });
 
+const selfStudyToTrace = (entry: SelfStudyEntry): Trace => ({
+  id: entry.href,
+  kind: "study",
+  kindLabel: "Study",
+  title: entry.title,
+  description: entry.description,
+  href: entry.href,
+  date: entry.date,
+  displayDate: formatDate(entry.updated ?? entry.date, "short"),
+  tags: [],
+  category: "self-study",
+  featured: false,
+  sortDate: entry.updated ?? entry.date ?? fallbackDate,
+});
+
 export const getAllTraces = async (): Promise<Trace[]> => {
-  const { rootEntries, sections } = await getArtCollegeListing();
+  const [artCollege, selfStudy] = await Promise.all([
+    getArtCollegeListing(),
+    getSelfStudyListing(),
+  ]);
+
   const studyEntries = [
-    ...rootEntries,
-    ...sections.flatMap((section) => section.entries),
+    ...artCollege.rootEntries,
+    ...artCollege.sections.flatMap((section) => section.entries),
   ].map(studyToTrace);
+
+  const selfStudyEntries = [
+    ...selfStudy.rootEntries,
+    ...selfStudy.sections.flatMap((section) => section.entries),
+  ].map(selfStudyToTrace);
 
   return sortDesc([
     ...allPosts.map(postToTrace),
     ...allEvents.map(eventToTrace),
     ...studyEntries,
+    ...selfStudyEntries,
   ]);
 };
 

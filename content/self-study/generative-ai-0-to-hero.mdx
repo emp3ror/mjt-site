@@ -1,0 +1,183 @@
+---
+draft: true
+title: "Generative AI: 0 → Hero"
+description: "A from-scratch path to building a GPT-style model, fine-tuning open models, and reasoning like a practitioner."
+intro: "Comfortable programmer, rusty math, goal: build and explain generative AI from first principles instead of just calling an API."
+date: "2026-07-01"
+updated: "2026-07-01"
+order: 1
+---
+
+**Your profile:** comfortable programmer · goal = understand & build from scratch · math currently rusty
+
+**Target definition of "hero":** you can build a GPT-style language model from scratch, explain every line, fine-tune existing open models, and reason about the field like a practitioner — not just call an API.
+
+**Realistic timeline:** ~6–9 months at 8–10 focused hours/week. Faster if you binge, slower if life happens. It's not a race.
+
+<CourseProgress courseId="genai-0-to-hero" />
+
+## How to use this roadmap
+
+Three rules that matter more than the resource list:
+
+1. **Just-in-time math, not math-first.** Do *not* spend two months on linear algebra before touching a neural net. Learn the specific math when the code demands it. Your rusty math is a feature here — you'll relearn it grounded in something concrete, which sticks.
+2. **Build before you read the theory in full.** For every phase there's a "build this" item. The reading exists to explain the thing you already made work.
+3. **The spine of this whole plan is Andrej Karpathy's "Neural Networks: Zero to Hero" series** (free, YouTube). It's almost literally designed for your exact request. Everything else supports it.
+
+---
+
+## Phase 0 — Tooling setup *(≈1 week, fast for you)*
+
+You already code, so this is just aligning to the ML stack.
+
+- **Python** — if you're not already fluent, spend a few days; the syntax is trivial for you, focus on idioms.
+- **NumPy** — array/vector thinking. This *is* the mental model for everything later.
+- **PyTorch** — the framework you'll use to build from scratch. Just install it and run the official "60-minute blitz" tutorial to get oriented.
+- **Environment** — Jupyter notebooks locally, plus **Google Colab** (free GPU) for anything that needs one.
+
+**Resources:**
+
+- [Install PyTorch](https://pytorch.org/get-started/locally/)
+- [PyTorch: Deep Learning with PyTorch — A 60 Minute Blitz](https://docs.pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html)
+- [NumPy quickstart](https://numpy.org/doc/stable/user/quickstart.html)
+- [Google Colab](https://colab.research.google.com/)
+- [Project Jupyter](https://jupyter.org/)
+
+**Build this:** a notebook that loads a CSV, does some NumPy array math, and plots something with matplotlib. Trivial — the point is a working environment.
+
+---
+
+## Phase 1 — Just-enough math *(≈2–3 weeks, ongoing thereafter)*
+
+Intuition-first, visual, no proofs. You are building *fluency*, not rigor.
+
+- **Linear algebra** → 3Blue1Brown, *Essence of Linear Algebra* (YouTube). Vectors, matrices, matrix multiplication, dot products. This is 80% of what you need.
+- **Calculus** → 3Blue1Brown, *Essence of Calculus*. You only need: what a derivative is, the chain rule, and what a gradient means. That's it for now.
+- **Probability** → distributions, sampling, expectation, and what "softmax turns numbers into probabilities" means. Light touch.
+
+**Resources:**
+
+- [3Blue1Brown — Essence of Linear Algebra (playlist)](https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab)
+- [3Blue1Brown — Essence of Calculus (playlist)](https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr)
+- [Khan Academy — Probability & statistics](https://www.khanacademy.org/math/statistics-probability) (for the light touch on distributions and expectation)
+
+**Don't finish this phase before moving on.** Get the gist, then come *back* here whenever a later phase uses something you forgot. Watch the relevant 10-min video again when you hit it in code.
+
+---
+
+## Phase 2 — Neural networks from scratch *(≈3–4 weeks)*
+
+The most important phase. Where the black box opens.
+
+- **Karpathy — "The spelled-out intro to neural networks and backpropagation" (micrograd).** You build a tiny automatic-differentiation engine and a neural net *by hand*, from zero. After this, backprop stops being magic.
+- **Karpathy — "makemore" (first 2–3 videos).** Build a character-level model; introduces the language-modeling mindset gently.
+
+**Resources:**
+
+- [Video: The spelled-out intro to neural networks and backpropagation: building micrograd](https://www.youtube.com/watch?v=VMj-3S1tku0)
+- [Repo: karpathy/micrograd](https://github.com/karpathy/micrograd)
+- [Video: The spelled-out intro to language modeling: building makemore](https://www.youtube.com/watch?v=PaCmpygFfXo)
+- [Repo: karpathy/makemore](https://github.com/karpathy/makemore)
+- [Playlist: Neural Networks: Zero to Hero](https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ)
+
+**Build this:** follow along and actually type out micrograd yourself (don't copy-paste). Then modify it — add an operation, break it, fix it.
+
+**Checkpoint:** can you explain, out loud, how a gradient flows backward through a two-layer network? If yes, you've cleared the hardest conceptual hurdle in the whole field.
+
+---
+
+## Phase 3 — Deep learning foundations *(≈4–6 weeks)*
+
+Now generalize from "tiny net by hand" to "real training."
+
+- **Training mechanics:** loss functions, optimizers (SGD → Adam), learning rates, batching, overfitting/regularization, train/val/test splits.
+- **Core building blocks:** embeddings, tokenization, activation functions, normalization.
+- **Optional breadth:** a light pass on CNNs (images) and RNNs (sequences) so you know what came before transformers and why they were replaced.
+- **Reference text:** *Dive into Deep Learning* (d2l.ai, free) — use as a lookup manual, not front-to-back reading. Alternatively, **fast.ai's "Practical Deep Learning for Coders"** if you want a more project-driven parallel track.
+
+**Resources:**
+
+- [Dive into Deep Learning (d2l.ai)](https://d2l.ai/)
+- [fast.ai — Practical Deep Learning for Coders](https://course.fast.ai/)
+- [PyTorch optimizer docs (SGD, Adam, etc.)](https://docs.pytorch.org/docs/stable/optim.html)
+
+**Build this:** train a small network in pure PyTorch on a real dataset (e.g. MNIST or a text classifier), tune it, and get a feel for why training goes wrong.
+
+---
+
+## Phase 4 — Transformers & LLMs from scratch *(≈4–6 weeks) — the core*
+
+This is where "generative AI" actually lives.
+
+- **Karpathy — "Let's build GPT: from scratch, in code, spelled out."** You build a working GPT. Self-attention, positional encoding, the transformer block — all by hand. This is the centerpiece of your entire journey.
+- **Karpathy — "Let's build the GPT Tokenizer."** BPE tokenization demystified; most people skip this and stay confused forever.
+- **Read the original paper, *"Attention Is All You Need"* (2017)** — but only *after* building GPT, so it reads as "oh, I made that" instead of hieroglyphics.
+- **nanoGPT** (Karpathy's repo) — a clean, real, trainable implementation to study and tinker with.
+
+**Resources:**
+
+- [Video: Let's build GPT: from scratch, in code, spelled out](https://www.youtube.com/watch?v=kCc8FmEb1nY)
+- [Video: Let's build the GPT Tokenizer](https://www.youtube.com/watch?v=zduSFxRajkE)
+- [Repo: karpathy/minbpe](https://github.com/karpathy/minbpe)
+- [Repo: karpathy/nanoGPT](https://github.com/karpathy/nanoGPT)
+- [Paper: Attention Is All You Need (arXiv:1706.03762)](https://arxiv.org/abs/1706.03762)
+
+**Build this:** train your own tiny GPT on a text corpus you care about (song lyrics, code, a book) and watch it generate. This is your "I actually did it" moment.
+
+**Checkpoint:** you can now draw the transformer architecture from memory and explain attention to someone else. That's the hero threshold for understanding.
+
+---
+
+## Phase 5 — Modern generative AI *(≈4–6 weeks)*
+
+From "I built a toy" to "I know how the real ones work."
+
+- **Fine-tuning & adaptation:** full fine-tuning vs. **LoRA/PEFT** (efficient fine-tuning on consumer hardware). Learn to fine-tune an open model (Llama, Mistral, etc.) on your own data.
+- **Alignment concepts:** what RLHF / instruction-tuning / DPO do and why base models ≠ chat models. Conceptual, not from-scratch.
+- **Practical LLM plumbing:** RAG (retrieval-augmented generation), embeddings/vector search, prompting, and a high-level look at agents — so you understand how apps are actually built on top of models.
+- **Diffusion models (optional branch):** if image/video generation interests you, learn how diffusion works (forward noising → learned denoising). Different math flavor, same from-scratch spirit — there are "diffusion from scratch" notebooks that mirror the Karpathy style.
+
+**Resources:**
+
+- [Hugging Face PEFT docs (LoRA and friends)](https://huggingface.co/docs/peft/index)
+- [Hugging Face — Fine-tuning a pretrained model](https://huggingface.co/docs/transformers/training)
+- [Paper: Training language models to follow instructions with human feedback (InstructGPT / RLHF), arXiv:2203.02155](https://arxiv.org/abs/2203.02155)
+- [Paper: Direct Preference Optimization (DPO), arXiv:2305.18290](https://arxiv.org/abs/2305.18290)
+- [Paper: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks, arXiv:2005.11401](https://arxiv.org/abs/2005.11401)
+- [LangChain — RAG tutorial](https://python.langchain.com/docs/tutorials/rag/)
+- [Paper: Denoising Diffusion Probabilistic Models, arXiv:2006.11239](https://arxiv.org/abs/2006.11239)
+- [Hugging Face — The Annotated Diffusion Model](https://huggingface.co/blog/annotated-diffusion)
+
+**Build this:** fine-tune a small open model on a custom dataset with LoRA, and separately build a minimal RAG pipeline over your own documents.
+
+---
+
+## Phase 6 — Capstone & specialization *(ongoing)*
+
+"Hero" is proven by shipping something, not finishing a curriculum.
+
+- **Pick one track** to go deep: LLMs/text, image generation, or applied GenAI products.
+- **Build one real end-to-end project** you'd show someone — e.g. a fine-tuned model for a specific task, a from-scratch model trained on a novel dataset, or a full RAG/agent app.
+- **Stay current:** follow a couple of practitioners, skim key papers (with an LLM to help decode them), reimplement interesting techniques.
+
+**Resources:**
+
+- [Papers with Code](https://paperswithcode.com/)
+- [arXiv — cs.CL (Computation and Language)](https://arxiv.org/list/cs.CL/recent)
+- [Hugging Face — Open LLM Leaderboard & model hub](https://huggingface.co/models)
+
+---
+
+## Anti-patterns that kill momentum
+
+- **Math rabbit-holing** — the #1 killer for your profile. Learn it when code needs it.
+- **Tutorial hell** — passively watching without typing the code yourself. Always build.
+- **Framework hopping** — pick PyTorch, ignore the debate, move on.
+- **Skipping the "boring" fundamentals** (backprop, tokenization) to get to the shiny stuff — those fundamentals *are* the shiny stuff, just disguised.
+- **Waiting to feel "ready"** — you learn by building broken things and fixing them.
+
+---
+
+## The one-line version
+
+Karpathy's *Zero to Hero* series is your spine → build micrograd → build GPT → fine-tune a real model → ship a project. Everything else is support. Start with Phase 0 this week.

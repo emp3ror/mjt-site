@@ -5,6 +5,7 @@
     { "label": "Gatherings", "href": "/events" },
     { "label": "Field Log", "href": "/trails" },
     { "label": "Study", "href": "/art-college" },
+    { "label": "Self Study", "href": "/self-study" },
     { "label": "Shop", "href": "/shop" },
     { "label": "Traces", "href": "/traces" }
   ],
@@ -21,6 +22,7 @@
     { "label": "Gatherings", "href": "/events" },
     { "label": "Field Log", "href": "/trails" },
     { "label": "Study", "href": "/art-college" },
+    { "label": "Self Study", "href": "/self-study" },
     { "label": "Shop", "href": "/shop" }
   ],
   "socials": [
@@ -39,6 +41,7 @@
     "tags": "Tags",
     "traces": "Traces",
     "art-college": "Study",
+    "self-study": "Self Study",
     "events": "Gatherings",
     "shop": "Shop",
     "trails": "Field Log"

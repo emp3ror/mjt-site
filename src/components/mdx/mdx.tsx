@@ -7,6 +7,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { CourseProgress } from "@/components/mdx/course-progress";
 
 type HeadingProps = ComponentPropsWithoutRef<"h2">;
 type ParagraphProps = ComponentPropsWithoutRef<"p">;
@@ -117,6 +118,7 @@ export const mdxComponents = {
     );
   },
   hr: () => <hr className="my-14 border-0 border-t border-[color:var(--line)]" />,
+  CourseProgress,
 };
 
 export function MdxContainer({ children, className }: MdxContainerProps) {
