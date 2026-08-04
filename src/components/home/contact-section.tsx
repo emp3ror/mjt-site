@@ -111,7 +111,7 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-20 md:py-24">
+    <section id="contact" className="section-block scroll-mt-28">
       <div className="page-wrap grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-start">
         <div className="space-y-8">
           <SectionHeading
@@ -149,26 +149,55 @@ export function ContactSection() {
           className="border-t border-[color:var(--line-strong)] pt-6 md:pt-8"
         >
           <div className="grid gap-6">
-            <label className="space-y-2">
+            <label className="flex flex-col gap-2">
               <span className="eyebrow">{contact.form.fields.name.label}</span>
-              <input id="name" name="name" type="text" required className={inputClass} />
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                maxLength={200}
+                required
+                className={inputClass}
+              />
             </label>
 
-            <label className="space-y-2">
+            <label className="flex flex-col gap-2">
               <span className="eyebrow">{contact.form.fields.email.label}</span>
-              <input id="email" name="email" type="email" required className={inputClass} />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                maxLength={320}
+                required
+                className={inputClass}
+              />
             </label>
 
-            <label className="space-y-2">
+            <label className="flex flex-col gap-2">
               <span className="eyebrow">{contact.form.fields.message.label}</span>
               <textarea
                 id="message"
                 name="message"
                 rows={5}
+                maxLength={5000}
                 required
                 className={`${inputClass} resize-y`}
               />
             </label>
+
+            {/* Honeypot: hidden from users, irresistible to naive bots. */}
+            <div aria-hidden className="absolute -left-[9999px] top-0 h-px w-px overflow-hidden">
+              <label htmlFor="company">Company</label>
+              <input
+                id="company"
+                name="company"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
 
             {recaptchaSiteKey ? (
               <div className="g-recaptcha" data-sitekey={recaptchaSiteKey} />

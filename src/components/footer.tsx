@@ -34,21 +34,23 @@ function LinkColumn({ title, links }: { title: string; links: FooterLink[] }) {
 }
 
 export function Footer() {
-  const { primary, archive, socials, footer } = navigation;
+  // `sections` and `archive` partition the site between them: the header
+  // already carries `primary`, so repeating it here just doubled every link.
+  const { sections, archive, socials, footer } = navigation;
 
   return (
-    <footer className="mt-24 border-t border-[color:var(--line-strong)]/50 bg-[color:var(--surface)]/76">
+    <footer className="mt-16 border-t border-[color:var(--line-strong)]/50 bg-[color:var(--surface)]/76">
       <div className="page-wrap grid gap-10 py-14 md:grid-cols-[1.15fr_0.7fr_0.75fr_0.75fr] md:py-16">
         <div className="space-y-6">
           <p className="eyebrow">{footer.eyebrow}</p>
-          <h2 className="max-w-md text-[2.05rem] leading-tight md:text-[2.7rem]">{footer.title}</h2>
+          <h2 className="max-w-md text-[1.9rem] leading-tight md:text-[2.35rem]">{footer.title}</h2>
           <p className="body-copy max-w-lg text-[color:var(--ink-soft)]">{footer.description}</p>
           <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
             © {new Date().getFullYear()} {footer.copyrightName}
           </p>
         </div>
 
-        <LinkColumn title="Navigate" links={primary} />
+        <LinkColumn title="Sections" links={sections} />
         <LinkColumn title="Archive" links={archive} />
         <LinkColumn title="Contact" links={socials} />
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 import { cn } from "@/lib/cn";
 import { courseChecklists, type CourseProgressItem } from "@/components/mdx/course-progress-data";
@@ -10,6 +10,57 @@ type CourseProgressProps = {
 };
 
 const storageKeyFor = (courseId: string) => `mjt:self-study:${courseId}:progress`;
+
+/**
+ * `localStorage` is the source of truth for progress, so it is read through
+ * `useSyncExternalStore` rather than mirrored into React state. Besides
+ * avoiding a hydration-time render cascade, this keeps two open tabs of the
+ * same course in sync via the native `storage` event.
+ */
+const STORAGE_EVENT = "mjt:progress-change";
+
+const subscribeToStorage = (onChange: () => void) => {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(STORAGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(STORAGE_EVENT, onChange);
+  };
+};
+
+const readRaw = (storageKey: string) => {
+  try {
+    // A string snapshot stays referentially stable between reads, which is
+    // what `useSyncExternalStore` requires; the Set is derived from it below.
+    return window.localStorage.getItem(storageKey) ?? "";
+  } catch {
+    // localStorage unavailable (private mode, disabled, etc.) — start fresh.
+    return "";
+  }
+};
+
+const writeRaw = (storageKey: string, value: string[] | null) => {
+  try {
+    if (value === null) {
+      window.localStorage.removeItem(storageKey);
+    } else {
+      window.localStorage.setItem(storageKey, JSON.stringify(value));
+    }
+  } catch {
+    // ignore — progress just won't survive a reload.
+  }
+  window.dispatchEvent(new Event(STORAGE_EVENT));
+};
+
+const parseRaw = (raw: string | null): Set<string> => {
+  if (!raw) return new Set();
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed as string[]) : new Set();
+  } catch {
+    return new Set();
+  }
+};
 
 const groupByPhase = (items: CourseProgressItem[]) => {
   const groups: { phase: string; items: CourseProgressItem[] }[] = [];
@@ -29,54 +80,25 @@ const groupByPhase = (items: CourseProgressItem[]) => {
 export function CourseProgress({ courseId }: CourseProgressProps) {
   const items = courseChecklists[courseId] ?? [];
   const storageKey = storageKeyFor(courseId);
-  const [done, setDone] = useState<Set<string>>(new Set());
-  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      setHydrated(true);
-      return;
-    }
+  const raw = useSyncExternalStore(
+    subscribeToStorage,
+    () => readRaw(storageKey),
+    () => null,
+  );
 
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (!raw) {
-        setHydrated(true);
-        return;
-      }
-      setDone(new Set(JSON.parse(raw) as string[]));
-    } catch {
-      // localStorage unavailable (private mode, disabled, etc.) — start fresh.
-    }
-    setHydrated(true);
-  }, [storageKey]);
-
-  const persist = (next: Set<string>) => {
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify([...next]));
-    } catch {
-      // ignore — progress just won't survive a reload.
-    }
-  };
+  // `null` only on the server / first paint, where localStorage is unreachable.
+  const hydrated = raw !== null;
+  const done = useMemo(() => parseRaw(raw), [raw]);
 
   const toggle = (id: string) => {
-    setDone((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      persist(next);
-      return next;
-    });
+    const next = new Set(done);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    writeRaw(storageKey, [...next]);
   };
 
-  const reset = () => {
-    setDone(new Set());
-    try {
-      window.localStorage.removeItem(storageKey);
-    } catch {
-      // ignore
-    }
-  };
+  const reset = () => writeRaw(storageKey, null);
 
   const percent = items.length ? Math.round((done.size / items.length) * 100) : 0;
   const groups = groupByPhase(items);

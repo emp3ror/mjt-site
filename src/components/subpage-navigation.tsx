@@ -4,7 +4,9 @@
  * Secondary navigation strip directly under the global header.
  *
  * - On the home route it renders a row of in-page anchor links so users can
- *   quickly jump between hero sections.
+ *   quickly jump between hero sections. The list is passed in already
+ *   filtered by the layout (see `lib/home-sections.ts`) so it can never link
+ *   to a section the home page chose not to render.
  * - On any other route it renders a breadcrumb trail. Segment labels are
  *   looked up in `content/site/navigation.json`; unknown segments fall back
  *   to a title-cased version of the slug.
@@ -17,10 +19,9 @@ import { useMemo } from "react";
 import navigation from "@content/site/navigation.json";
 
 type Crumb = { label: string; href?: string };
+type Anchor = { label: string; href: string };
 
 const segmentLabels = navigation.breadcrumbLabels as Record<string, string>;
-const homeAnchors = (navigation as { homeAnchors?: Array<{ label: string; href: string }> })
-  .homeAnchors ?? [];
 
 const titleCase = (value: string) =>
   value
@@ -51,7 +52,7 @@ const buildCrumbs = (pathname: string | null): Crumb[] => {
   ];
 };
 
-export function SubpageNavigation() {
+export function SubpageNavigation({ homeAnchors = [] }: { homeAnchors?: Anchor[] }) {
   const pathname = usePathname();
   const crumbs = useMemo(() => buildCrumbs(pathname), [pathname]);
 
@@ -62,9 +63,14 @@ export function SubpageNavigation() {
         aria-label="On this page"
         className="absolute inset-x-0 top-[var(--header-height)] z-40 bg-transparent"
       >
-        <div className="page-wrap flex items-center gap-3 py-3.5 text-[0.69rem] uppercase tracking-[0.3em] text-white/70">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full border border-white/45" />
-          <ol className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        {/* The strip floats over the hero, so it must stay a single line —
+            wrapping pushed a third row down into the hero eyebrow on phones. */}
+        <div className="page-wrap flex items-center gap-3 py-3.5 text-[0.72rem] uppercase tracking-[0.2em] text-white/75 sm:text-[0.69rem] sm:tracking-[0.3em]">
+          <span
+            aria-hidden
+            className="h-1.5 w-1.5 shrink-0 rounded-full border border-white/45"
+          />
+          <ol className="no-scrollbar flex min-w-0 items-center gap-x-5 overflow-x-auto whitespace-nowrap">
             {homeAnchors.map((item) => (
               <li key={item.href}>
                 <Link
@@ -88,8 +94,11 @@ export function SubpageNavigation() {
       aria-label="Location"
       className="border-b border-[color:var(--line)]/70 bg-[color:var(--surface)]/72"
     >
-      <div className="page-wrap flex items-center gap-3 py-3.5 text-[0.69rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
-        <span aria-hidden className="h-1.5 w-1.5 rounded-full border border-[color:var(--accent)]/50" />
+      <div className="page-wrap flex items-center gap-3 py-3.5 text-[0.72rem] uppercase tracking-[0.2em] text-[color:var(--muted)] sm:text-[0.69rem] sm:tracking-[0.3em]">
+        <span
+          aria-hidden
+          className="h-1.5 w-1.5 shrink-0 rounded-full border border-[color:var(--accent)]/50"
+        />
         <ol className="flex flex-wrap items-center gap-2">
           {crumbs.map((item, index) => {
             const isLast = index === crumbs.length - 1;

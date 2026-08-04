@@ -1,9 +1,13 @@
 "use client";
 
 /**
- * Hamburger-driven drawer for compact viewports. Mirrors the primary
- * navigation list, keeps focus trapped inside the drawer while open, and
- * closes on Escape or backdrop tap.
+ * Hamburger-driven drawer for viewports below `lg`, where the inline
+ * header nav does not fit. Mirrors the primary navigation list, keeps
+ * focus trapped inside the drawer while open, and closes on Escape,
+ * backdrop tap, route change, or when the viewport grows past `lg`.
+ *
+ * The `lg` breakpoint is mirrored in `NAV_MEDIA_QUERY` so the scroll lock
+ * can never outlive the drawer that set it.
  */
 
 import Link from "next/link";
@@ -33,6 +37,9 @@ const FOCUSABLE = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
+/** Mirrors the `lg:hidden` / `hidden lg:block` classes on this component and `Header`. */
+const NAV_MEDIA_QUERY = "(min-width: 1024px)";
+
 export function MobileNav({ items, socials = [], appearance = "default" }: MobileNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -48,6 +55,20 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
     setLastPathname(pathname);
     if (open) setOpen(false);
   }
+
+  // The drawer is `lg:hidden`, so growing past `lg` would hide it while the
+  // body scroll lock below stayed applied — leaving the page unscrollable.
+  // Close on the breakpoint change instead. (The trigger is `lg:hidden` too,
+  // so the drawer can never be opened above the breakpoint in the first place.)
+  useEffect(() => {
+    const query = window.matchMedia(NAV_MEDIA_QUERY);
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setOpen(false);
+    };
+
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -103,7 +124,8 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
         aria-label={open ? "Close navigation" : "Open navigation"}
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          "inline-flex h-10 w-10 items-center justify-center rounded-full border transition sm:hidden",
+          // `relative z-50` keeps the trigger tappable above the open backdrop.
+          "relative z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border transition lg:hidden",
           appearance === "light"
             ? "border-white/40 text-white/85 hover:border-white hover:text-white"
             : "border-[color:var(--line-strong)]/65 text-[color:var(--ink-soft)] hover:border-[color:var(--accent)] hover:text-[color:var(--foreground)]",
@@ -137,8 +159,11 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
             type="button"
             aria-hidden
             tabIndex={-1}
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 bg-[color:var(--foreground)]/40 backdrop-blur-sm sm:hidden"
+            onClick={() => {
+              setOpen(false);
+              triggerRef.current?.focus();
+            }}
+            className="fixed inset-0 z-40 bg-[color:var(--foreground)]/40 backdrop-blur-sm lg:hidden"
           />
           <div
             id={drawerId}
@@ -146,7 +171,7 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
-            className="fixed inset-x-4 top-[calc(var(--header-height)+0.75rem)] z-50 max-h-[80vh] overflow-y-auto rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-6 shadow-[0_30px_70px_rgba(38,31,20,0.18)] sm:hidden"
+            className="fixed inset-x-4 top-[calc(var(--header-height)+0.75rem)] z-50 max-h-[calc(100svh-var(--header-height)-2rem)] overflow-y-auto overscroll-contain rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-6 shadow-[0_30px_70px_rgba(38,31,20,0.18)] lg:hidden"
           >
             <nav aria-label="Primary mobile" className="space-y-5">
               <ul className="space-y-1.5">
@@ -156,6 +181,7 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        aria-current={active ? "page" : undefined}
                         className={cn(
                           "block rounded-2xl px-4 py-3 text-[1.05rem] font-medium",
                           active
@@ -176,16 +202,21 @@ export function MobileNav({ items, socials = [], appearance = "default" }: Mobil
                     Elsewhere
                   </p>
                   <ul className="flex flex-wrap gap-2 px-1">
-                    {socials.map((item) => (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] px-3 py-1.5 text-[0.85rem] text-[color:var(--ink-soft)] hover:border-[color:var(--accent)] hover:text-[color:var(--foreground)]"
-                        >
-                          {item.label}
-                        </Link>
-                      </li>
-                    ))}
+                    {socials.map((item) => {
+                      const external = item.href.startsWith("http");
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            target={external ? "_blank" : undefined}
+                            rel={external ? "noreferrer" : undefined}
+                            className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] px-3.5 py-2 text-[0.85rem] text-[color:var(--ink-soft)] hover:border-[color:var(--accent)] hover:text-[color:var(--foreground)]"
+                          >
+                            {item.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ) : null}

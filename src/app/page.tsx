@@ -1,3 +1,4 @@
+import { ContactSection } from "@/components/home/contact-section";
 import { HomeHero } from "@/components/home/home-hero";
 import { JournalSection } from "@/components/home/journal-section";
 import { StoriesSection } from "@/components/home/stories-section";
@@ -21,12 +22,13 @@ export default function Home() {
   const events = byNewest(allEvents);
 
   return (
-    <div className="pb-20 md:pb-28">
+    <div>
       <HomeHero />
       <VolunteeringSection events={events} posts={posts} formatDate={formatDate} />
       <JournalSection posts={posts} formatDate={formatDate} />
       <TrailsSection trails={allTrails} formatDate={formatDate} />
       <StoriesSection posts={posts} />
+      <ContactSection />
     </div>
   );
 }

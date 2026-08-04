@@ -6,11 +6,12 @@
  */
 
 import { CalendarDays, CalendarPlus, Download } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { ContentActions } from "@/components/actions/content-actions";
 import { buildGoogleCalendarLink, buildIcsDataUri, buildMicrosoftCalendarLink } from "@/lib/calendar";
 import { formatEventDateRange } from "@/lib/events";
+import { useOrigin } from "@/lib/use-origin";
 
 type EventActionsProps = {
   event: {
@@ -30,11 +31,7 @@ const BOOKMARK_KEY = "mjt-bookmarked-events";
 const LIKE_KEY = "mjt-liked-events";
 
 export function EventActions({ event }: EventActionsProps) {
-  const [origin, setOrigin] = useState<string | null>(null);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
+  const origin = useOrigin();
 
   const eventUrl = useMemo(() => {
     if (!origin) {

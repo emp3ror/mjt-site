@@ -16,8 +16,7 @@
   --highlight: #95503f;
   --base: #fffcf6;
   --muted: #6f6357;
-  --font-serif: var(--font-serif);
-  --font-sans: var(--font-sans);
+  /* --font-serif / --font-sans are injected on <body> by next/font. */
   --header-height: 4.125rem;
   --measure-prose: 70ch;
   --measure-wide: 92ch;
@@ -194,6 +193,18 @@ p {
 .section-heading-stack {
   display: grid;
   gap: clamp(0.9rem, 2vw, 1.25rem);
+}
+
+/* Horizontal scrollers that shouldn't show a scrollbar chrome (nav strips). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .paper-card {
@@ -837,7 +848,8 @@ p {
   font-size: clamp(1.8rem, 5.2vw, 4.2rem);
   letter-spacing: -0.012em;
   white-space: nowrap;
-  color: rgba(255, 250, 240, 0.78);
+  /* Bright poster frames pushed 0.78 close to the AA floor over the overlay. */
+  color: rgba(255, 250, 240, 0.88);
   opacity: 0;
   transform: translateY(0.6rem);
   animation: hero-headline-rise 900ms 120ms cubic-bezier(0.2, 0.7, 0.1, 1) forwards;
@@ -1000,6 +1012,25 @@ p {
 @keyframes hero-rule-in {
   to {
     transform: scaleX(1);
+  }
+}
+
+/* Safety net: the rules above name specific elements, so anything added later
+   (card lifts, arrow nudges, rail snapping) would still animate. This catches
+   the rest. Durations are near-zero rather than `none` so `forwards` keyframes
+   still settle on their end state instead of sticking at opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .volunteering-rail {
+    scroll-snap-type: none;
   }
 }
 

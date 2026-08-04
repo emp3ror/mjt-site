@@ -3,10 +3,13 @@ import { Inter_Tight, Newsreader } from "next/font/google";
 
 import "./globals.css";
 
+import navigation from "@content/site/navigation.json";
+
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { PageSurface } from "@/components/page-surface";
 import { SubpageNavigation } from "@/components/subpage-navigation";
+import { filterHomeAnchors } from "@/lib/home-sections";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
@@ -35,6 +38,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Resolved on the server so the anchor strip never flashes a link to a
+  // section the home page didn't render.
+  const homeAnchors = filterHomeAnchors(navigation.homeAnchors);
+
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${newsreader.variable} ${interTight.variable} site-shell antialiased`}>
@@ -43,7 +50,7 @@ export default function RootLayout({
         </a>
         <div className="flex min-h-screen flex-col">
           <Header />
-          <SubpageNavigation />
+          <SubpageNavigation homeAnchors={homeAnchors} />
           <PageSurface>{children}</PageSurface>
           <Footer />
         </div>

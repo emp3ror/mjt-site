@@ -126,9 +126,27 @@ declare global {
   }
 }
 
+// Pinned versions + Subresource Integrity: without `integrity` a compromised
+// or hijacked CDN could serve arbitrary script into every trail page.
+// Regenerate with: curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A
 const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+const LEAFLET_CSS_SRI =
+  "sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H";
 const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+const LEAFLET_JS_SRI =
+  "sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH";
 const CHART_JS = "https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js";
+const CHART_JS_SRI =
+  "sha384-Sse/HDqcypGpyTDpvZOJNnG0TT3feGQUkF9H+mnRvic+LjR+K1NhTt8f51KIQ3v3";
+
+/** Escapes text before it is interpolated into a Leaflet popup / divIcon. */
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 let leafletPromise: Promise<Leaflet | undefined> | null = null;
 let chartPromise: Promise<ChartModule | undefined> | null = null;
@@ -157,6 +175,8 @@ const ensureLeaflet = async () => {
       const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = LEAFLET_CSS;
+      link.integrity = LEAFLET_CSS_SRI;
+      link.crossOrigin = "anonymous";
       link.dataset.leaflet = "true";
       document.head.appendChild(link);
     };
@@ -180,6 +200,8 @@ const ensureLeaflet = async () => {
 
     const script = document.createElement("script");
     script.src = LEAFLET_JS;
+    script.integrity = LEAFLET_JS_SRI;
+    script.crossOrigin = "anonymous";
     script.async = true;
     script.dataset.leaflet = "true";
     script.onload = () => resolve(window.L);
@@ -221,6 +243,8 @@ const ensureChart = async () => {
 
     const script = document.createElement("script");
     script.src = CHART_JS;
+    script.integrity = CHART_JS_SRI;
+    script.crossOrigin = "anonymous";
     script.async = true;
     script.dataset.chartjs = "true";
     script.onload = () => resolve(window.Chart);
@@ -742,7 +766,7 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
           ? {
               icon: leaflet.divIcon({
                 className: "hike-map-marker",
-                html: `<div style="display:flex;align-items:center;justify-content:center;font-size:18px;height:32px;width:32px;border-radius:16px;background:#fff;border:2px solid var(--leaf);box-shadow:0 6px 18px rgba(44,45,94,0.12);">${waypoint.icon}</div>`,
+                html: `<div style="display:flex;align-items:center;justify-content:center;font-size:18px;height:32px;width:32px;border-radius:16px;background:#fff;border:2px solid var(--leaf);box-shadow:0 6px 18px rgba(44,45,94,0.12);">${escapeHtml(waypoint.icon)}</div>`,
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],
               }),
@@ -752,8 +776,10 @@ const updateActiveCheckpoint = useCallback((value: number | null) => {
       const marker = leaflet.marker([waypoint.lat, waypoint.lon], markerOptions);
       marker.addTo(map);
       if (waypoint.name || waypoint.desc) {
-        const label = `<strong>${waypoint.name ?? "Checkpoint"}</strong>${
-          waypoint.desc ? `<br/>${waypoint.desc}` : ""
+        // `name` / `desc` come from GPX XML and MDX frontmatter, so they are
+        // untrusted markup as far as this sink is concerned.
+        const label = `<strong>${escapeHtml(waypoint.name ?? "Checkpoint")}</strong>${
+          waypoint.desc ? `<br/>${escapeHtml(waypoint.desc)}` : ""
         }`;
         marker.bindPopup?.(label);
       }

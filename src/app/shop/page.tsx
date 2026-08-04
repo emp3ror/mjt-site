@@ -92,7 +92,7 @@ export default async function ShopPage() {
             <Link
               key={item._id}
               href={item.url}
-              className="group block h-full rounded-[2rem] border border-[color:var(--muted)]/60 bg-gradient-to-b from-white/95 via-white to-[color:var(--foreground)]/2 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(44,45,94,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)]"
+              className="group block h-full rounded-[2rem] border border-[color:var(--muted)]/60 bg-gradient-to-b from-white/95 via-white to-[color:var(--foreground)]/2 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(44,45,94,0.16)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-3">

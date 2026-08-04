@@ -22,6 +22,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { useOrigin } from "@/lib/use-origin";
 
 type CalendarOption = {
   id: string;
@@ -59,7 +60,7 @@ type ContentActionsProps = {
 type CopyState = "idle" | "copied" | "error";
 
 const iconButtonClass =
-  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--line)] text-[color:var(--ink-soft)] transition hover:border-[color:var(--line-strong)] hover:text-[color:var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]";
+  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--line)] text-[color:var(--ink-soft)] transition hover:border-[color:var(--line-strong)] hover:text-[color:var(--foreground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]";
 
 export function ContentActions({
   itemId,
@@ -72,7 +73,7 @@ export function ContentActions({
   className,
   header,
 }: ContentActionsProps) {
-  const [origin, setOrigin] = useState<string | null>(null);
+  const origin = useOrigin();
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>("idle");
@@ -83,10 +84,6 @@ export function ContentActions({
   const calendarMenuId = hasCalendar ? `content-actions-calendar-${itemId}` : undefined;
   const triggerLabel = calendar?.triggerLabel ?? "Add to calendar";
   const TriggerIcon = calendar?.triggerIcon ?? CalendarPlus;
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   useEffect(() => {
     if (!likeStorageKey || typeof window === "undefined") {
@@ -388,7 +385,7 @@ export function ContentActions({
           <div ref={calendarMenuRef} className="relative">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-strong)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-strong)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent-strong)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
               onClick={toggleCalendarMenu}
               aria-expanded={calendarOpen}
               aria-haspopup="menu"
@@ -410,7 +407,7 @@ export function ContentActions({
                   return (
                     <a
                       key={option.id}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[color:var(--ink-soft)] transition hover:bg-black/0 hover:text-[color:var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[color:var(--ink-soft)] transition hover:bg-[color:var(--accent-soft)] hover:text-[color:var(--foreground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--accent)]"
                       href={option.href}
                       target={option.target}
                       rel={option.rel}

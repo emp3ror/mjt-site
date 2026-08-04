@@ -8,6 +8,8 @@ import Link from "next/link";
 
 import homeHero from "@content/site/home-hero.json";
 
+import { getHomeSectionIds } from "@/lib/home-sections";
+
 import { HomeHeroMedia } from "./home-hero-media";
 
 export type HomeHeroContent = typeof homeHero;
@@ -15,10 +17,24 @@ export type HomeHeroContent = typeof homeHero;
 const DEFAULT_POSTER = "/hero/hero-poster.jpg";
 const DEFAULT_OVERLAY_OPACITY = 0.62;
 
+/**
+ * Home sections hide themselves when they have no content, so an in-page CTA
+ * can point at a section that isn't on the page. Drop those CTAs rather than
+ * render a button that does nothing when clicked.
+ */
+const ctaResolves = (href: string, sectionIds: ReadonlySet<string>) =>
+  href.startsWith("#") ? sectionIds.has(href.slice(1)) : true;
+
 export function HomeHero() {
   const { backgroundVideo } = homeHero;
   const poster = backgroundVideo?.poster ?? DEFAULT_POSTER;
   const overlayOpacity = backgroundVideo?.overlayOpacity ?? DEFAULT_OVERLAY_OPACITY;
+
+  const sectionIds = getHomeSectionIds();
+  const showPrimaryCta = ctaResolves(homeHero.primaryCta.href, sectionIds);
+  const showSecondaryCta = ctaResolves(homeHero.secondaryCta.href, sectionIds);
+  // If the primary CTA fell away, the secondary one carries the emphasis.
+  const secondaryIsLead = !showPrimaryCta;
 
   return (
     <section
@@ -64,19 +80,30 @@ export function HomeHero() {
             </div>
 
             <div className="flex flex-wrap gap-3.5 text-sm text-white/82">
-              <Link
-                href={homeHero.primaryCta.href}
-                className="hero-cta hero-cta--primary inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/18 px-5 py-2.5 font-medium text-[color:var(--base)] hover:-translate-y-0.5 hover:border-white/55 hover:bg-white/24"
-              >
-                {homeHero.primaryCta.label}
-                <span aria-hidden className="hero-cta__arrow">→</span>
-              </Link>
-              <Link
-                href={homeHero.secondaryCta.href}
-                className="hero-cta inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/20 px-4 py-2.5 text-[color:var(--base)] hover:-translate-y-0.5 hover:border-white/45 hover:text-white"
-              >
-                {homeHero.secondaryCta.label}
-              </Link>
+              {showPrimaryCta ? (
+                <Link
+                  href={homeHero.primaryCta.href}
+                  className="hero-cta hero-cta--primary inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/18 px-5 py-2.5 font-medium text-[color:var(--base)] hover:-translate-y-0.5 hover:border-white/55 hover:bg-white/24"
+                >
+                  {homeHero.primaryCta.label}
+                  <span aria-hidden className="hero-cta__arrow">→</span>
+                </Link>
+              ) : null}
+              {showSecondaryCta ? (
+                <Link
+                  href={homeHero.secondaryCta.href}
+                  className={
+                    secondaryIsLead
+                      ? "hero-cta hero-cta--primary inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/18 px-5 py-2.5 font-medium text-[color:var(--base)] hover:-translate-y-0.5 hover:border-white/55 hover:bg-white/24"
+                      : "hero-cta inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/20 px-4 py-2.5 text-[color:var(--base)] hover:-translate-y-0.5 hover:border-white/45 hover:text-white"
+                  }
+                >
+                  {homeHero.secondaryCta.label}
+                  {secondaryIsLead ? (
+                    <span aria-hidden className="hero-cta__arrow">→</span>
+                  ) : null}
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>

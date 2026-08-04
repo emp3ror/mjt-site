@@ -49,7 +49,7 @@ export function PostCard({ post, className }: PostCardProps) {
               aria-hidden
               className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[linear-gradient(135deg,var(--surface),var(--accent-soft))] text-[color:var(--accent-strong)]"
             >
-              <span className="font-display text-[clamp(2.4rem,4vw,3.4rem)] tracking-[-0.02em]">
+              <span className="font-serif text-[clamp(2.4rem,4vw,3.4rem)] tracking-[-0.02em]">
                 {initials}
               </span>
               <span className="text-[0.7rem] uppercase tracking-[0.32em] text-[color:var(--ink-soft)]">

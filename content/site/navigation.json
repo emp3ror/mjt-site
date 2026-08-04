@@ -16,13 +16,16 @@
     { "label": "Stories", "href": "/#stories" },
     { "label": "Contact", "href": "/#contact" }
   ],
-  "archive": [
-    { "label": "Traces", "href": "/traces" },
+  "sections": [
     { "label": "Notes", "href": "/posts" },
     { "label": "Gatherings", "href": "/events" },
-    { "label": "Field Log", "href": "/trails" },
     { "label": "Study", "href": "/art-college" },
-    { "label": "Self Study", "href": "/self-study" },
+    { "label": "Self Study", "href": "/self-study" }
+  ],
+  "archive": [
+    { "label": "All traces", "href": "/traces" },
+    { "label": "Tags", "href": "/tags" },
+    { "label": "Field Log", "href": "/trails" },
     { "label": "Shop", "href": "/shop" }
   ],
   "socials": [

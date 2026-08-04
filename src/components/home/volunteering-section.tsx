@@ -15,6 +15,18 @@ import { VolunteeringRail, type VolunteeringSlide } from "./volunteering-rail";
 
 const COPY = homeContent.volunteering;
 
+/**
+ * Whether this section will render at all — it hides itself when there is
+ * nothing to show (e.g. every event is still a draft). Callers that link to
+ * `#volunteering` use this so the anchor never points at a missing section.
+ * Mirrors the emptiness check in `buildSlides` below.
+ */
+export const hasVolunteeringSlides = (events: Event[], posts: Post[]): boolean =>
+  events.length > 0 ||
+  posts.some((post) =>
+    post.tags.some((tag) => COPY.supportingPostTags.includes(tag)),
+  );
+
 const cleanCover = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
   const trimmed = value.trim();

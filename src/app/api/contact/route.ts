@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 
 import { notifyContactChannels } from "@/lib/contact-notifier";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 
+/** Submissions allowed per client, per window. */
+const RATE_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
+
 const contactFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(200, "Name is too long."),
-  email: z.string().trim().min(1, "Email is required.").email("Provide a valid email address."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required.")
+    .max(320, "Email is too long.")
+    .email("Provide a valid email address."),
   message: z.string().trim().min(1, "Message is required.").max(5000, "Message is too long."),
 });
 
@@ -19,8 +28,44 @@ function getStringValue(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : undefined;
 }
 
+/**
+ * Best-effort client identity for rate limiting. Proxy headers are spoofable,
+ * so this throttles casual abuse rather than a determined attacker — pair it
+ * with edge/WAF rate limiting in production.
+ */
+function clientKey(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]!.trim();
+  }
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
 export async function POST(request: Request) {
-  const payload = await request.formData();
+  const { allowed, retryAfterSeconds } = checkRateLimit(
+    `contact:${clientKey(request)}`,
+    RATE_LIMIT,
+  );
+
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many messages sent. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
+    );
+  }
+
+  let payload: FormData;
+  try {
+    payload = await request.formData();
+  } catch {
+    return NextResponse.json({ error: "Invalid form submission." }, { status: 400 });
+  }
+
+  // Honeypot: a real browser leaves the off-screen field empty. Answer with a
+  // plain success so bots get no signal to adapt to, but send nothing onward.
+  if ((getStringValue(payload.get("company")) ?? "").trim().length > 0) {
+    return NextResponse.json({ received: true });
+  }
 
   const recaptchaToken = getStringValue(payload.get("g-recaptcha-response")) ?? "";
 
@@ -78,20 +123,17 @@ export async function POST(request: Request) {
     };
 
     if (!verification.success) {
+      // The raw error codes describe our own configuration; keep them server-side.
+      console.warn("reCAPTCHA verification failed", verification["error-codes"]);
       return NextResponse.json(
-        {
-          error: "reCAPTCHA verification failed.",
-          details: verification["error-codes"] ?? null,
-        },
+        { error: "reCAPTCHA verification failed. Please try again." },
         { status: 400 },
       );
     }
   } else if (recaptchaToken) {
+    console.error("Received a reCAPTCHA token but GOOGLE_RECAPTCHA_SECRET_KEY is not set.");
     return NextResponse.json(
-      {
-        error: "reCAPTCHA server secret is not configured.",
-        issues: parsedEnv.success ? null : parsedEnv.error.flatten().fieldErrors,
-      },
+      { error: "Contact form is misconfigured. Please email instead." },
       { status: 500 },
     );
   }
@@ -100,14 +142,14 @@ export async function POST(request: Request) {
   const delivered = notificationResults.filter((result) => result.ok);
 
   if (notificationResults.length > 0 && delivered.length === 0) {
+    // Channel names and failure reasons expose which integrations exist and how
+    // they are configured, so they are logged rather than returned.
+    console.error("Contact delivery failed on every channel", notificationResults);
     return NextResponse.json(
-      {
-        error: "Unable to deliver the message to the configured channel(s).",
-        results: notificationResults,
-      },
+      { error: "Unable to deliver your message right now. Please try again later." },
       { status: 502 },
     );
   }
 
-  return NextResponse.json({ received: true, results: notificationResults });
+  return NextResponse.json({ received: true });
 }
