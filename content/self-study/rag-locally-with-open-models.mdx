@@ -1,0 +1,307 @@
+---
+draft: false
+title: "RAG, Locally, With Open Models"
+description: "A build-first path to running retrieval-augmented generation entirely on one machine — open weights, local vectors, no API key. Sized for an RTX 2070."
+intro: "One PC, 8 GB of VRAM, goal: answer questions over my own documents with a model I control — and know why it fails when it fails."
+date: "2026-08-03"
+updated: "2026-08-03"
+order: 2
+---
+
+**The machine this is written for:** RTX 2070 (8 GB, Turing) · i7-11700 (8C/16T, AVX-512) · 32 GB RAM · ~1.4 TB free
+
+**Target definition of "done":** you can point a pipeline at a folder of your own documents, ask questions in natural language, get grounded answers with citations, and — when it gets something wrong — tell within two minutes whether the retriever or the generator is at fault. All of it offline, on the hardware already under your desk.
+
+**Realistic timeline:** ~8–12 weeks at 6–8 focused hours/week. The first working version takes one evening. The remaining eleven weeks are about making it not embarrassing.
+
+<CourseProgress courseId="rag-local-open-source" />
+
+## How to use this roadmap
+
+Four rules that matter more than the tool list:
+
+1. **Ship the naive version in the first sitting.** RAG is four moving parts glued together. Build all four badly on day one, then improve one at a time. Reading about chunking strategies before you have a pipeline to chunk *for* is wasted time.
+2. **No framework until Phase 4.** LangChain and LlamaIndex are genuinely useful, but they hide exactly the seams you're here to learn. Write the loop yourself first — it's about forty lines. Adopt a framework later, deliberately, when you know what it's saving you.
+3. **Retrieval is the hard part. Generation is not.** Beginners blame the model. It's almost always the retriever. This roadmap spends three phases on retrieval and one on generation, and that ratio is correct.
+4. **You cannot improve what you don't measure.** Phase 3 is an evaluation phase, and it comes *before* the optimisation phase on purpose. Skip it and you'll spend a month tuning chunk sizes based on vibes.
+
+---
+
+## Phase 0 — Know your constraint *(≈2 evenings)*
+
+Every decision downstream is shaped by one number, and on this box it's **8 GB of VRAM**. The i7-11700, the 32 GB of system RAM and the 1.4 TB of free disk are all comfortable. The GPU is the thing you'll be budgeting against for the next three months, so start by looking at it honestly.
+
+```bash
+nvidia-smi --query-gpu=name,memory.total,memory.used,compute_cap --format=csv
+# NVIDIA GeForce RTX 2070, 8192 MiB, 827 MiB, 7.5
+```
+
+That ~827 MiB is your desktop session. **Real budget: about 7.3 GB.** Plan against that number, not 8192.
+
+### What actually fits
+
+Model files are roughly their on-disk size in VRAM, plus KV cache, plus half a gig of compute buffers. At 4-bit (`Q4_K_M`, the default quantisation worth starting from):
+
+- **3–4B** — around 2–2.5 GB. Leaves enormous headroom. Genuinely viable for RAG, because RAG asks the model to *summarise text you hand it* rather than recall facts from its weights, which is the task small models are least bad at.
+- **7–9B** — around 4.4–4.9 GB. **This is your tier.** Fits with room for an 8k context and a reranker alongside. Everything below assumes it.
+- **12–14B** — 7.5–9 GB. A 12B squeaks in with a short context and nothing else resident; a 14B does not fit. Ollama will silently spill the overflow to CPU rather than error, and you'll be running at a fraction of the speed without noticing.
+- **27B and up** — not on this card. Don't spend a weekend finding out.
+
+Same logic for precision: an 8B at `Q5_K_M` (~5.7 GB) still fits, `Q8_0` (~8.5 GB) does not. Phase 5 is where you find out whether the quality difference between those is real for your task or imaginary.
+
+### Turing-specific gotchas
+
+Compute capability **7.5** is old enough that several defaults in the modern ML stack are wrong for it. These cost people an afternoon each:
+
+- **No bfloat16.** `bf16` is Ampere and later. Any script that says `torch_dtype=torch.bfloat16` needs `torch.float16` here, and vLLM needs an explicit `--dtype half` or it will complain and fall back.
+- **No FlashAttention 2.** FA2 requires SM 8.0+. Pass `attn_implementation="sdpa"` to Hugging Face models instead — PyTorch's scaled-dot-product attention works fine on Turing. (Confusingly, llama.cpp's *own* flash-attention kernels are separate and do work here — see below.)
+- **4-bit bitsandbytes does work**, so QLoRA is on the table later if you want it.
+
+### VRAM budget, three models at once
+
+A serious RAG stack wants three models resident: a generator, an embedder, and a reranker. On 8 GB that's a real constraint rather than a rounding error, and it's the main thing that shapes your architecture:
+
+- 8B generator at `Q4_K_M` — **4.7 GB**
+- KV cache, 8k context, fp16 — **~1.0 GB** (Llama-3.1-8B is ~128 KB per token across its 32 layers)
+- Compute buffers — **~0.5 GB**
+- `nomic-embed-text` embedder — **~0.3 GB**
+- `bge-reranker-base` cross-encoder in fp16 — **~0.6 GB**
+
+That totals **~7.1 GB** against a ~7.3 GB budget. It fits, barely. Two settings buy back headroom, and both are worth turning on now:
+
+```bash
+# ~/.config/environment.d/ollama.conf, or your systemd override
+OLLAMA_FLASH_ATTENTION=1     # llama.cpp's flash attention — works on Turing
+OLLAMA_KV_CACHE_TYPE=q8_0    # halves KV cache; requires the flag above
+OLLAMA_NUM_PARALLEL=1        # each parallel slot multiplies the KV cache
+```
+
+Quantising the KV cache to `q8_0` takes that 1.0 GB to ~0.5 GB for a quality cost you will struggle to detect. `OLLAMA_NUM_PARALLEL` matters more than it looks: the default lets Ollama serve several requests at once, and every slot gets its own KV cache. You're one user. Set it to 1.
+
+The other escape valve: **run the embedder and reranker on the CPU.** The i7-11700 has AVX-512 and eight cores doing nothing while the GPU generates. A 137M-parameter embedder and a 278M cross-encoder are small; on CPU they cost you a second or two per query and give the generator the whole card. Bring them onto the GPU only if you measure a problem.
+
+### Speed you should expect
+
+Generation is memory-bandwidth bound, and the 2070 has 448 GB/s. An 8B at `Q4_K_M` is ~4.7 GB, so the theoretical ceiling is ~95 tok/s and reality lands **roughly 35–55 tok/s** with full GPU offload. A 3B lands 2–3× higher. If you see single digits, the model has spilled to CPU — check `nvidia-smi` while it's generating, because that one mistake accounts for most "why is local AI so slow" complaints.
+
+Measure yours and write it down; it sets your iteration speed for the next two months.
+
+**Setup:** Ollama is already on this machine (`/usr/bin/ollama`, client 0.32.5) but the daemon isn't running. Start it, then pull a chat model and an embedding model.
+
+```bash
+systemctl --user start ollama     # or: sudo systemctl start ollama, or: ollama serve
+
+ollama pull llama3.1:8b           # 4.7 GB — or qwen3, gemma3, mistral; check the library
+ollama pull nomic-embed-text      # 274 MB, small and fast
+
+ollama run --verbose llama3.1:8b "Explain retrieval-augmented generation in three sentences."
+```
+
+`--verbose` prints eval rate on completion. That's your number.
+
+**Resources:**
+
+- [Ollama](https://ollama.com/) · [model library](https://ollama.com/library) — check current models here rather than trusting any blog post's list, including this one
+- [llama.cpp](https://github.com/ggml-org/llama.cpp) — what Ollama is built on; you'll want it directly when you care about specific flags
+- [Hugging Face — GGUF format and quantisation](https://huggingface.co/docs/hub/gguf)
+- [NVIDIA CUDA GPU compute capabilities](https://developer.nvidia.com/cuda-gpus) — confirms the 7.5 that explains the gotchas above
+
+**Checkpoint:** an 8B model answers in tens of tokens per second, `nvidia-smi` shows it fully on the GPU, and you can produce an embedding vector — with the network unplugged.
+
+---
+
+## Phase 1 — The naive pipeline, in one sitting *(≈1 week)*
+
+RAG is four steps: **chunk → embed → retrieve → stuff into a prompt**. Build all four with no abstractions, on a small corpus you know well — twenty of your own notes, a codebase README set, one book. Small enough that you can verify every answer by hand.
+
+**The mental model:** you are not teaching the model anything. You are doing a search, then pasting the results above the user's question and asking the model to read. That's it. Every sophisticated RAG technique is a better version of "do the search well."
+
+**Build this** — the entire loop, no framework:
+
+```python
+# rag_min.py — the whole thing. Read it once and you understand RAG.
+import ollama, chromadb
+
+CHUNKS = [...]  # start with a list of strings; real loaders come later
+
+col = chromadb.Client().create_collection("notes")
+
+# 1. Embed + store
+for i, chunk in enumerate(CHUNKS):
+    vec = ollama.embed(model="nomic-embed-text", input=chunk)["embeddings"][0]
+    col.add(ids=[str(i)], embeddings=[vec], documents=[chunk])
+
+# 2. Retrieve
+question = "What did I decide about the caching layer?"
+qvec = ollama.embed(model="nomic-embed-text", input=question)["embeddings"][0]
+hits = col.query(query_embeddings=[qvec], n_results=4)["documents"][0]
+context = "\n\n---\n\n".join(hits)
+
+# 3. Stuff + generate
+prompt = f"""Answer the question using ONLY the context below.
+If the context does not contain the answer, say "Not in my notes."
+
+Context:
+{context}
+
+Question: {question}"""
+
+print(ollama.generate(model="llama3.1:8b", prompt=prompt)["response"])
+```
+
+On this card that runs comfortably — one 8B and one embedder co-resident is ~5 GB, well inside budget. Indexing a few thousand chunks with `nomic-embed-text` is a matter of minutes, not hours, so don't build a caching layer for it yet.
+
+**Then do the thing everyone skips:** print `hits` before every answer. Read the retrieved chunks yourself. You will immediately see that half your "the model is dumb" moments are the retriever handing it the wrong paragraphs.
+
+**Resources:**
+
+- [Paper: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (arXiv:2005.11401)](https://arxiv.org/abs/2005.11401) — the original, short and readable
+- [Chroma docs](https://docs.trychroma.com/) — easiest local vector store to start with
+- [Ollama Python library](https://github.com/ollama/ollama-python)
+
+**Checkpoint:** you can ask a question about your own documents and get an answer that's grounded in them — and you can name, out loud, all four stages it passed through.
+
+---
+
+## Phase 2 — Understand each moving part *(≈2 weeks)*
+
+Now open the four boxes you just glued together. One at a time, with the pipeline running so you can change something and see it move.
+
+- **Embeddings.** What a vector actually encodes, why cosine similarity approximates "means the same thing," and why it fails on negation, names, and numbers. Learn the difference between symmetric (text↔text) and asymmetric (query↔document) models, and note that several models want a prefix like `query:` / `passage:` — using them without it quietly degrades retrieval and nobody tells you.
+- **Chunking.** Fixed-size vs. recursive vs. structural (split on headings) vs. semantic. Overlap and why it exists. The real tension: chunks small enough to be precisely matched, large enough to carry the answer. There is no universally correct size — which is exactly why Phase 3 exists.
+- **Vector stores and indexes.** Flat/brute-force vs. HNSW (approximate, fast at scale). With 32 GB of RAM, a flat index over 100k chunks is a non-issue — a 768-dim float32 index of 100k chunks is ~300 MB and searches exhaustively in milliseconds. You almost certainly should not trade recall for latency at your corpus size. Know what HNSW does; don't reach for it reflexively.
+- **Context assembly.** Token budgeting, ordering, and the fact that models attend unevenly across a long context — material in the middle gets neglected. Put the strongest hit first or last, not buried. On 8 GB this has teeth: context length costs VRAM linearly through the KV cache, so "just send more chunks" is a decision with a hardware bill.
+
+**Resources:**
+
+- [Sentence Transformers docs](https://www.sbert.net/) — the reference mental model for embeddings
+- [MTEB leaderboard](https://huggingface.co/spaces/mteb/leaderboard) — for choosing an embedding model; filter to models under ~500M params, which is the range that runs free on your CPU
+- [Paper: Lost in the Middle — How Language Models Use Long Contexts (arXiv:2307.03172)](https://arxiv.org/abs/2307.03172)
+- [Paper: Retrieval-Augmented Generation for Large Language Models — A Survey (arXiv:2312.10997)](https://arxiv.org/abs/2312.10997) — the map of everything in Phases 4–5
+- [sqlite-vec](https://github.com/asg017/sqlite-vec) · [LanceDB](https://lancedb.github.io/lancedb/) · [FAISS](https://github.com/facebookresearch/faiss) — alternatives worth knowing; sqlite-vec is a strong local default once you outgrow toy scripts
+
+**Build this:** an experiment harness — one script, same twenty questions, and command-line switches for chunk size, overlap, embedding model, and `k`. You'll use it constantly in Phase 4, and building it now costs an hour.
+
+---
+
+## Phase 3 — Evaluation, before optimisation *(≈1–2 weeks)*
+
+The phase that separates people who improve their RAG system from people who fiddle with it forever. Do not skip it. It is boring for about three days and then becomes the most useful thing you own.
+
+- **Build a golden set.** Thirty to fifty questions over your own corpus, each with the correct answer and — critically — the chunk(s) that contain it. Yes, write them by hand. You can bootstrap drafts by having the local 8B generate candidate questions per chunk, but you review every one.
+- **Measure retrieval separately from generation.** This is the whole point. Retrieval: hit rate / recall@k, and MRR if you care about ordering. Generation: faithfulness (is the answer supported by the retrieved context?) and answer relevancy.
+- **Establish the ceiling.** Run generation with the *correct* chunks hand-fed in. That score is the best your generator can do; anything below it is retrieval's fault. This single number retargets most people's effort correctly — and on an 8B it also tells you honestly whether you're at the model's limit or the retriever's.
+- **Automate it, cheaply.** A plain script with recall@k and an LLM-as-judge pass using your local model is enough. Frameworks are optional here. Budget the wall-clock: 50 questions at ~40 tok/s with a judge pass is a coffee break, not an overnight job — but it's slow enough that you'll want it as one command you can walk away from.
+
+**Resources:**
+
+- [Ragas](https://docs.ragas.io/) — RAG-specific metrics (faithfulness, context precision/recall)
+- [DeepEval](https://github.com/confident-ai/deepeval) — testing-framework flavour, integrates with pytest
+- [BEIR](https://github.com/beir-cellar/beir) — how retrieval is benchmarked properly, worth skimming for the vocabulary
+
+**Build this:** `eval.py` that prints one table of recall@5, faithfulness, and end-to-end accuracy. Commit the golden set to version control. Re-run it after every change from here on.
+
+**Checkpoint:** you have a number. When someone asks "did that help?", you answer with evidence instead of an impression.
+
+---
+
+## Phase 4 — Make retrieval actually good *(≈3–4 weeks)*
+
+The core engineering phase, and the one your hardware is *best* suited to — every technique here is cheap on an 8 GB card, because they improve what you send the model rather than demanding a bigger one. Add **one** at a time and re-run the eval. In roughly descending order of payoff per hour:
+
+- **Reranking.** The highest-leverage single change, and most people find it last. Retrieve 25–50 candidates with the vector search, then rerank with a cross-encoder and keep the top 4–5. Cross-encoders read query and document *together* instead of comparing pre-computed vectors, so they're far more accurate and far too slow to run over a whole corpus — which is precisely why the two-stage setup works. Start with `bge-reranker-base` (278M) on the CPU: scoring 30 candidates costs a second or two on the i7-11700 and zero VRAM. Move to `bge-reranker-v2-m3` (568M, ~1.1 GB fp16) only if the eval says the base model is the bottleneck.
+- **Hybrid search.** Dense vectors miss exact tokens: error codes, function names, product SKUs, proper nouns. BM25 keyword search nails those and misses paraphrases. Run both, fuse with Reciprocal Rank Fusion. Pure CPU, no VRAM, reliably better.
+- **Query transformation.** The user's question is often a bad search query. Rewrite it with the local 8B, generate multiple phrasings and union the results, or try HyDE — generate a hypothetical answer and search with *that*, since a fake answer resembles a real passage more than a question does. Note the cost on this box: each rewrite is an extra generation pass, so a multi-query fan-out adds a second or two per question. Measure whether it earns that.
+- **Small-to-big retrieval.** Embed small precise chunks, but return the surrounding parent section to the model. Fixes the precision/context tension from Phase 2 directly and is usually a bigger win than any chunk-size tuning.
+- **Contextual chunk headers.** Prepend a short model-generated summary of the document to each chunk before embedding it, so an isolated paragraph still knows what it's about. This is the one technique here with a real hardware cost — it's one 8B generation per chunk at index time, so a 5,000-chunk corpus is an hours-long batch job on a 2070. Run it overnight, once. The retrieval gain on fragmentary corpora is worth it.
+- **Metadata filtering.** Store source, date, section, and type alongside each chunk, and filter before you search. "What did I write about this *last month*" is a filter problem, not a semantic one — no embedding model will ever solve it.
+
+**Resources:**
+
+- [BGE reranker (BAAI/bge-reranker-v2-m3)](https://huggingface.co/BAAI/bge-reranker-v2-m3) · [bge-reranker-base](https://huggingface.co/BAAI/bge-reranker-base) — start with the second
+- [BGE-M3](https://huggingface.co/BAAI/bge-m3) — dense + sparse + multi-vector in one model, multilingual
+- [rank_bm25](https://github.com/dorianbrown/rank_bm25) — BM25 in a few lines, no server required
+- [Paper: Reciprocal Rank Fusion (Cormack et al.)](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)
+- [Paper: HyDE — Precise Zero-Shot Dense Retrieval without Relevance Labels (arXiv:2212.10496)](https://arxiv.org/abs/2212.10496)
+- [Anthropic — Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval) — the write-up that popularised contextual chunk headers
+- [LlamaIndex docs](https://docs.llamaindex.ai/) · [LangChain RAG tutorial](https://python.langchain.com/docs/tutorials/rag/) — read these *now*, once you know what they're abstracting, and adopt whichever parts save you real work
+
+**Build this:** a retriever with hybrid search plus reranking, benchmarked against your Phase 1 baseline on the same golden set. Expect a large jump. Write down the number.
+
+---
+
+## Phase 5 — Generation, grounding, and serving *(≈2–3 weeks)*
+
+Retrieval is solved enough. Now make the answers trustworthy and the system usable.
+
+- **Grounding and citations.** Number your chunks in the prompt and require the model to cite them per claim. Verify the citations programmatically — a claim citing a chunk that doesn't support it is your best hallucination detector, and it's mechanical to check.
+- **Teach it to decline.** An 8B wants to be helpful more than it wants to be correct, noticeably more than a frontier model does. Explicit instructions, a worked example of refusing, and a similarity floor below which you don't call the model at all.
+- **Structured output.** Ask for JSON with `answer`, `citations`, `confidence`. Constrained decoding (GBNF grammars in llama.cpp, `format` in Ollama) makes it reliable rather than hopeful — and it's the cheapest way to make a small model behave like a bigger one.
+- **Context budgeting.** Count tokens before you send. On this card the ceiling is VRAM, not the model's advertised window: at `q8_0` KV cache an 8B will hold 16k tokens in about 0.5 GB, but doubling context also roughly doubles prefill time. More chunks is not more better, and here it has a measurable price.
+- **Streaming.** At 35–55 tok/s a long answer takes real seconds, so time-to-first-token is most of the perceived speed. Cheap, large UX win — do it early.
+- **Quantisation, settled empirically.** Run the eval on `Q4_K_M` and `Q5_K_M` of the same model. Both fit; one is 1 GB larger. Find out whether the difference is real for your task instead of inheriting someone's forum opinion.
+- **Skip vLLM.** It's the right answer for throughput under concurrent load, but on 8 GB it's the wrong tool: unquantised weights won't fit, it pre-allocates VRAM aggressively, and Turing needs an explicit `--dtype half` because there's no bf16. Its advantage is batching for many simultaneous users, and you are one. Stay on Ollama, and graduate to llama.cpp's `llama-server` directly when you want flags Ollama doesn't expose.
+
+**Resources:**
+
+- [Ollama structured outputs](https://ollama.com/blog/structured-outputs)
+- [llama.cpp GBNF grammars](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md)
+- [llama.cpp server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) — the direct-control option
+- [Open WebUI](https://github.com/open-webui/open-webui) — a local chat frontend if you'd rather not build one
+
+**Build this:** answers that cite their sources, decline when the context is thin, and stream. Re-run the eval — faithfulness should climb noticeably.
+
+---
+
+## Phase 6 — Ship one real thing *(ongoing)*
+
+A tutorial corpus proves nothing. Point it at documents you actually need answers from — your notes, your reading archive, a codebase, years of saved articles — and live with it for a month. That's where the unglamorous problems surface, and they're the ones that decide whether anyone uses it.
+
+- **Ingestion is the real work.** PDFs are hostile: multi-column layouts, tables, scans, headers bleeding into body text. Garbage parsing is the single most common cause of a RAG system that mysteriously underperforms, and no amount of retrieval tuning compensates for it. Note that the good parsers are themselves GPU models — Marker will want the card that your generator is sitting on, so parse as a separate batch pass rather than trying to run both at once.
+- **Incremental indexing.** Content changes. Handle updates and deletions without rebuilding from scratch: hash each chunk, re-embed only what moved. This matters more here than on rented hardware, because a full re-index of a large corpus is an evening of your GPU's time.
+- **Disk is your one abundant resource.** With ~1.4 TB free you can afford to keep the raw documents, the extracted text, *and* several competing index builds side by side. Do — being able to A/B two chunking strategies without re-parsing anything is worth the gigabytes.
+- **A small interface.** A CLI is fine. Streamlit is fine. What matters is that it's low-friction enough that you reach for it instead of grepping.
+- **Observability.** Log every query with its retrieved chunks and final answer. Your logs become the source of your next golden-set questions — the real failures are always more interesting than the ones you imagined.
+
+**Resources:**
+
+- [Docling](https://github.com/docling-project/docling) · [Unstructured](https://github.com/unstructured-IO/unstructured) · [Marker](https://github.com/VikParuchuri/marker) — document parsing, in increasing order of "handles ugly PDFs"
+- [Streamlit](https://streamlit.io/) — fastest path to a usable local UI
+
+**Then pick a direction to go deep.** Two of these suit 8 GB unusually well:
+
+- **Fine-tuning an embedding model** on your own domain. A `bge-small` (33M) fine-tune trains comfortably on a 2070 in minutes, and once you have a golden set you already have most of the training data. Highest ROI per VRAM of anything on this list.
+- **QLoRA on the 8B generator** — 4-bit bitsandbytes works on Turing, so this fits with short sequence lengths. Tight but real; remember `fp16` not `bf16`, and `sdpa` not FlashAttention 2.
+- **Agentic retrieval** (the model decides when and what to search, and can search again after reading) — free in VRAM terms, just more generation passes.
+- **GraphRAG** for corpora where relationships matter more than passages — cheap to serve, expensive to index.
+
+---
+
+## Debugging triage: is it retrieval or generation?
+
+The two-minute diagnostic, worth internalising early:
+
+1. **Print the retrieved chunks and read them.** Is the answer physically present in the text you handed the model?
+2. **If no → retrieval problem.** This is the answer 80% of the time. Go to Phase 4: reranking first, then hybrid search, then query rewriting.
+3. **If yes, and the answer was still wrong → generation problem.** Prompt, context ordering, or an 8B genuinely at its limit.
+4. **Still unsure?** Paste the same chunks into a large hosted model by hand. If it answers correctly, the local 8B is the bottleneck — fix the prompt, or accept that this class of question needs a model that doesn't fit on this card. If it also fails, your chunks are worse than you thought — go back to step 2.
+5. **And if it's slow rather than wrong:** `nvidia-smi` during generation. Anything less than full offload means you've quietly crossed the 7.3 GB line — usually by raising context length or loading a third model.
+
+---
+
+## Anti-patterns that kill momentum
+
+- **Framework-first.** Starting with LangChain means debugging an abstraction and a concept you don't understand simultaneously. Forty lines of your own code first.
+- **Tuning chunk size before you have an eval set.** The classic. You'll spend three weeks moving a number between 500 and 800 with no way to tell if anything improved.
+- **Blaming the model.** It's the retriever. Check the retriever.
+- **Wishing for a bigger GPU.** An 8B with reranking and hybrid search beats a 14B with naive retrieval, and only one of those fits on this card. The constraint is pushing you toward the techniques that matter anyway.
+- **Ignoring the spill.** A model that overflows 8 GB doesn't crash, it crawls. Check `nvidia-smi` before you conclude that local inference is just slow.
+- **Assuming PDF parsing works.** Open your extracted text and look at it before you index a single page.
+- **Treating the index as write-once.** If updating a document means a full rebuild, you'll stop updating documents, and the system quietly becomes stale.
+- **Optimising on vibes.** If you can't state the before-and-after number, you don't know that the change helped.
+
+---
+
+## The one-line version
+
+Start the Ollama daemon and pull an 8B at `Q4_K_M` → write forty lines of naive RAG tonight → build a fifty-question eval set → add a CPU reranker and hybrid search → make it cite sources → point it at documents you actually care about. Retrieval is the hard part; 8 GB is enough for all of it.
